@@ -1,0 +1,21 @@
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/chatapp
+    username: postgres
+    password: admin
+  sql:
+    init:
+      mode: always
+      platform: postgres
+
+
+chat-app:
+  security:
+    jwt:
+      secret: "jwtSecret123nosdfj"
+      expiration-hours: 24
