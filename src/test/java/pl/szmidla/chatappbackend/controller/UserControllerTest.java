@@ -1,24 +1,24 @@
 package pl.szmidla.chatappbackend.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.validation.ValidatorContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.RequestBuilder;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import pl.szmidla.chatappbackend.data.User;
 import pl.szmidla.chatappbackend.data.dto.UserRequest;
+import pl.szmidla.chatappbackend.exception.ItemNotFoundException;
 import pl.szmidla.chatappbackend.service.UserService;
+
+import javax.validation.ValidatorContext;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
@@ -46,7 +46,7 @@ class UserControllerTest {
 
     @Test
     void registerUser() throws Exception {
-        String path = "/register";
+        String path = "/api/register";
         UserRequest userRequest = createUserRequest("username", "em@email.com", "password");
         String expectedResponseString = UserService.REGISTER_SUCCESS;
         when( userService.registerUser(any()) ).thenReturn( expectedResponseString );
@@ -64,7 +64,7 @@ class UserControllerTest {
     /** username is invalid - too short */
     @Test
     void registerUserInvalidBodyUsername() throws Exception {
-        String path = "/register";
+        String path = "/api/register";
         UserRequest userRequest = createUserRequest("usern", "em@email.com", "password");
         String expectedResponseString = UserService.REGISTER_SUCCESS;
 
@@ -77,7 +77,7 @@ class UserControllerTest {
     /** email is invalid */
     @Test
     void registerUserInvalidBodyEmail() throws Exception {
-        String path = "/register";
+        String path = "/api/register";
         UserRequest userRequest = createUserRequest("username", "ememail.com", "password");
         String expectedResponseString = UserService.REGISTER_SUCCESS;
 
@@ -90,7 +90,7 @@ class UserControllerTest {
     /** password is invalid - too long */
     @Test
     void registerUserInvalidBodyPassword() throws Exception {
-        String path = "/register";
+        String path = "/api/register";
         UserRequest userRequest = createUserRequest("username", "ememail.com",
                 "passasdasdasdasdasdddasdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddrd");
         String expectedResponseString = UserService.REGISTER_SUCCESS;
@@ -103,7 +103,8 @@ class UserControllerTest {
 
     @Test
     void getNUsersByPhrase() throws Exception {
-        String path = "/users-by-phrase";UserRequest userRequest = createUserRequest("username", "em@email.com", "password");
+        String path = "/api/users-by-phrase";
+        UserRequest userRequest = createUserRequest("username", "em@email.com", "password");
         String phrase = "phrase";
         Page page = Page.empty();
         String expectedResponseString = objectMapper.writeValueAsString(page);
@@ -125,5 +126,65 @@ class UserControllerTest {
         userRequest.setEmail(email);
         userRequest.setPassword(password);
         return userRequest;
+    }
+
+    @Test
+    void isUsernameTakenNo() throws Exception {
+        String path = "/api/register/username-exists";
+        String username = "username123";
+        boolean expectedResponse = false;
+        when( userService.usernameExists(username) ).thenReturn( expectedResponse );
+
+        MvcResult result = mockMvc.perform(get(path)
+                        .param("username", username))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertEquals( new ObjectMapper().writeValueAsString(expectedResponse), result.getResponse().getContentAsString() );
+    }
+
+    @Test
+    void isUsernameTakenYes() throws Exception {
+        String path = "/api/register/username-exists";
+        String username = "username123";
+        boolean expectedResponse = false;
+        when(userService.usernameExists(username)).thenReturn( expectedResponse );
+
+        MvcResult result = mockMvc.perform(get(path)
+                        .param("username", username))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertEquals( new ObjectMapper().writeValueAsString(expectedResponse), result.getResponse().getContentAsString() );
+    }
+
+    @Test
+    void isEmailTakenNo() throws Exception {
+        String path = "/api/register/email-exists";
+        String email = "email@email.com";
+        boolean expectedResponse = true;
+        when( userService.emailExists(email) ).thenReturn( expectedResponse );
+
+        MvcResult result = mockMvc.perform(get(path)
+                        .param("email", email))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertEquals( new ObjectMapper().writeValueAsString(expectedResponse), result.getResponse().getContentAsString() );
+    }
+
+    @Test
+    void isEmailTakenYes() throws Exception {
+        String path = "/api/register/email-exists";
+        String email = "email@email.com";
+        boolean expectedResponse = false;
+        when( userService.emailExists(email) ).thenReturn(expectedResponse);
+
+        MvcResult result = mockMvc.perform(get(path)
+                        .param("email", email))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertEquals( new ObjectMapper().writeValueAsString(expectedResponse), result.getResponse().getContentAsString() );
     }
 }
