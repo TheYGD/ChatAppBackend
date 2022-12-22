@@ -9,15 +9,15 @@ import pl.szmidla.chatappbackend.data.User;
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<Long, User> {
+public interface UserRepository extends JpaRepository<User, Long> {
 
     User save(User user);
 
-    Optional<User> findByUsernameOrEmail(String usernameOrEmail);
+    Optional<User> findByUsernameOrEmail(String username, String email);
 
     boolean existsByEmail(String email);
 
     boolean existsByUsername(String username);
 
-    Page<User> findAllContainingUsernameIgnoreCase(String phrase, Pageable pageable);
+    Page<User> findAllByUsernameContainingIgnoreCase(String phrase, Pageable pageable);
 }

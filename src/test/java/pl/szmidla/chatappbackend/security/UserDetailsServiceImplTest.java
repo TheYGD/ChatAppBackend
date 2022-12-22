@@ -27,7 +27,7 @@ class UserDetailsServiceImplTest {
     void loadUserByUsernameSuccess() {
         String usernameOrEmail = "asdjasd";
         User expectedUser = new User();
-        when( userRepository.findByUsernameOrEmail(anyString()) ).thenReturn( Optional.of(expectedUser) );
+        when( userRepository.findByUsernameOrEmail(anyString(), anyString()) ).thenReturn( Optional.of(expectedUser) );
 
         User actualUser = userDetailsService.loadUserByUsername(usernameOrEmail);
 
@@ -37,7 +37,7 @@ class UserDetailsServiceImplTest {
     @Test
     void loadUserByUsernameFail() {
         String usernameOrEmail = "asdjasd";
-        when( userRepository.findByUsernameOrEmail(anyString()) ).thenReturn( Optional.empty() );
+        when( userRepository.findByUsernameOrEmail(anyString(), anyString()) ).thenReturn( Optional.empty() );
 
         assertThrows( ItemNotFoundException.class, () -> userDetailsService.loadUserByUsername(usernameOrEmail));
     }
