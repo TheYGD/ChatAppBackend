@@ -7,9 +7,11 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 import pl.szmidla.chatappbackend.config.PropertiesConfig;
+import pl.szmidla.chatappbackend.data.User;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -19,7 +21,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
 
 @Slf4j
@@ -27,8 +29,10 @@ public class MyAuthorizationFilter extends OncePerRequestFilter {
 
     private static String JWT_SECRET;
     public static final String JWT_TOKEN_PREFIX = "Bearer ";
+    private final UserDetailsServiceImpl userDetailsService;
 
-    public MyAuthorizationFilter(PropertiesConfig propertiesConfig) {
+    public MyAuthorizationFilter(UserDetailsServiceImpl userDetailsService, PropertiesConfig propertiesConfig) {
+        this.userDetailsService = userDetailsService;
         JWT_SECRET = propertiesConfig.JWT_SECRET;
     }
 
@@ -45,15 +49,17 @@ public class MyAuthorizationFilter extends OncePerRequestFilter {
                     JWTVerifier verifier = JWT.require(algorithm).build();
                     DecodedJWT decodedJWT = verifier.verify(token);
                     String username = decodedJWT.getSubject();
+
+                    User user = userDetailsService.loadUserByUsername(username);
                     UsernamePasswordAuthenticationToken authenticationToken =
-                            new UsernamePasswordAuthenticationToken(username, null, List.of());
+                            new UsernamePasswordAuthenticationToken(user, null, List.of());
+
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                     filterChain.doFilter(request, response);
                 }
                 catch (Exception exception) {
                     log.error("Error logging in: {}", exception.getMessage());
-                    response.setHeader("error", exception.getMessage());
-                    response.setStatus(FORBIDDEN.value());
+                    response.setStatus(UNAUTHORIZED.value());
 
                     Map<String, String> error = new HashMap<>();
                     error.put("error_message", exception.getMessage());

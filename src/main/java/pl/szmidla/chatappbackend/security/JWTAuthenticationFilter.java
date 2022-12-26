@@ -47,9 +47,10 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         User user = (User) authentication.getPrincipal();
         Algorithm algorithm = Algorithm.HMAC256(JWT_SECRET);
 
+        Date expirationDate = new Date( System.currentTimeMillis() + JWT_EXPIRATION_MS);
         String jwtToken = JWT.create()
                 .withSubject(user.getUsername())
-                .withExpiresAt( new Date( System.currentTimeMillis() + JWT_EXPIRATION_MS) )
+                .withExpiresAt( expirationDate )
                 .withIssuer(request.getRequestURL().toString())
                 .sign(algorithm);
 

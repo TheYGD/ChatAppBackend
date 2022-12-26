@@ -11,6 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
 import pl.szmidla.chatappbackend.config.PropertiesConfig;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
@@ -22,17 +23,21 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authenticationManager,
-                                                   PropertiesConfig propertiesConfig) throws Exception {
+                                                   PropertiesConfig propertiesConfig, UserDetailsServiceImpl userDetailsService) throws Exception {
         JWTAuthenticationFilter jwtAuthenticationFilter = new JWTAuthenticationFilter(authenticationManager, propertiesConfig);
         jwtAuthenticationFilter.setFilterProcessesUrl("/api/login");
 
-        http.csrf().disable().cors().disable();
+        CorsConfiguration corsConfiguration = new CorsConfiguration().applyPermitDefaultValues();
+
+        http.csrf().disable();
+        http.cors().configurationSource( request -> corsConfiguration );
         http.sessionManagement().sessionCreationPolicy(STATELESS);
         http.authorizeHttpRequests( requests -> requests
                 .antMatchers("/api/login/**").permitAll()
+                .antMatchers("/api/register/**").permitAll()
                 .anyRequest().authenticated());
         http.addFilter(jwtAuthenticationFilter);
-        http.addFilterBefore(new MyAuthorizationFilter(propertiesConfig), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(new MyAuthorizationFilter(userDetailsService, propertiesConfig), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
