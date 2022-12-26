@@ -3,7 +3,7 @@ package pl.szmidla.chatappbackend.api;
 import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import pl.szmidla.chatappbackend.data.dto.UserRequest;
+import pl.szmidla.chatappbackend.data.User;
 import pl.szmidla.chatappbackend.service.UserService;
 
 import javax.validation.Valid;
@@ -16,8 +16,8 @@ public class RegisterApi {
     private UserService userService;
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public String registerUser(@RequestBody @Valid UserRequest userRequest) {
-        return userService.registerUser(userRequest);
+    public String registerUser(@RequestBody @Valid User user) {
+        return userService.registerUser(user);
     }
 
     @GetMapping(value = "/username-exists", produces = MediaType.APPLICATION_JSON_VALUE)
