@@ -8,15 +8,13 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import pl.szmidla.chatappbackend.data.dto.UserRequest;
-import pl.szmidla.chatappbackend.exception.ItemNotFoundException;
+import pl.szmidla.chatappbackend.data.User;
 import pl.szmidla.chatappbackend.repository.UserRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -30,37 +28,40 @@ class UserServiceTest {
 
     @Test
     void registerUserSuccess() {
-        UserRequest userRequest = createUserRequest("username1", "email@em.pl", "passW0rd");
+        User user = createUser("username1", "email@em.pl", "passW0rd");
         String expectedResponse = UserService.REGISTER_SUCCESS;
         when( userRepository.existsByEmail(anyString()) ).thenReturn( false );
         when( userRepository.existsByUsername(anyString()) ).thenReturn( false );
 
-        String actualResponse = userService.registerUser(userRequest);
+        String actualResponse = userService.registerUser(user);
 
         assertEquals(expectedResponse, actualResponse);
+        verify( passwordEncoder ).encode(any());
     }
 
     @Test
     void registerUserEmailTaken() {
-        UserRequest userRequest = createUserRequest("username1", "email@em.pl", "passW0rd");
+        User user = createUser("username1", "email@em.pl", "passW0rd");
         String expectedResponse = UserService.REGISTER_EMAIL_TAKEN;
         when( userRepository.existsByEmail(anyString()) ).thenReturn( true );
 
-        Throwable response = assertThrows(IllegalArgumentException.class, () -> userService.registerUser(userRequest));
+        Throwable response = assertThrows(IllegalArgumentException.class, () -> userService.registerUser(user));
 
         assertEquals( expectedResponse, response.getMessage() );
+        verify( passwordEncoder, times(0) ).encode(any());
     }
 
     @Test
     void registerUserUsernameTaken() {
-        UserRequest userRequest = createUserRequest("username1", "email@em.pl", "passW0rd");
+        User user = createUser("username1", "email@em.pl", "passW0rd");
         String expectedResponse = UserService.REGISTER_USERNAME_TAKEN;
         when( userRepository.existsByEmail(anyString()) ).thenReturn( false );
         when( userRepository.existsByUsername(anyString()) ).thenReturn( true );
 
-        Throwable response = assertThrows(IllegalArgumentException.class, () -> userService.registerUser(userRequest));
+        Throwable response = assertThrows(IllegalArgumentException.class, () -> userService.registerUser(user));
 
         assertEquals( expectedResponse, response.getMessage() );
+        verify( passwordEncoder, times(0) ).encode(any());
     }
 
     @Test
@@ -85,12 +86,12 @@ class UserServiceTest {
     }
 
 
-    private UserRequest createUserRequest(String username, String email, String password) {
-        UserRequest userRequest = new UserRequest();
-        userRequest.setUsername(username);
-        userRequest.setEmail(email);
-        userRequest.setPassword(password);
-        return userRequest;
+    private User createUser(String username, String email, String password) {
+        User user = new User();
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPassword(password);
+        return user;
     }
 
     @Test

@@ -9,7 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import pl.szmidla.chatappbackend.data.dto.UserRequest;
+import pl.szmidla.chatappbackend.data.User;
 import pl.szmidla.chatappbackend.service.UserService;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,13 +37,13 @@ class RegisterApiTest {
     @Test
     void registerUser() throws Exception {
         String path = "/api/register";
-        UserRequest userRequest = createUserRequest("username", "em@email.com", "password");
+        User user = createUser("username", "em@email.com", "password");
         String expectedResponseString = UserService.REGISTER_SUCCESS;
         when( userService.registerUser(any()) ).thenReturn( expectedResponseString );
 
         String actualResponseString = mockMvc.perform( post(path)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content( objectMapper.writeValueAsString(userRequest) ))
+                        .content( objectMapper.writeValueAsString(user) ))
                 .andExpect( status().isOk() )
                 .andExpect( content().contentType(MediaType.APPLICATION_JSON) )
                 .andReturn().getResponse().getContentAsString();
@@ -55,12 +55,11 @@ class RegisterApiTest {
     @Test
     void registerUserInvalidBodyUsername() throws Exception {
         String path = "/api/register";
-        UserRequest userRequest = createUserRequest("usern", "em@email.com", "password");
-        String expectedResponseString = UserService.REGISTER_SUCCESS;
+        User user = createUser("usern", "em@email.com", "password");
 
         mockMvc.perform( post(path)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content( objectMapper.writeValueAsString(userRequest) ))
+                        .content( objectMapper.writeValueAsString(user) ))
                 .andExpect( status().isBadRequest() );
     }
 
@@ -68,12 +67,11 @@ class RegisterApiTest {
     @Test
     void registerUserInvalidBodyEmail() throws Exception {
         String path = "/api/register";
-        UserRequest userRequest = createUserRequest("username", "ememail.com", "password");
-        String expectedResponseString = UserService.REGISTER_SUCCESS;
+        User user = createUser("username", "ememail.com", "password");
 
         mockMvc.perform( post(path)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content( objectMapper.writeValueAsString(userRequest) ))
+                        .content( objectMapper.writeValueAsString(user) ))
                 .andExpect( status().isBadRequest() );
     }
 
@@ -81,22 +79,22 @@ class RegisterApiTest {
     @Test
     void registerUserInvalidBodyPassword() throws Exception {
         String path = "/api/register";
-        UserRequest userRequest = createUserRequest("username", "ememail.com",
+        User user = createUser("username", "ememail.com",
                 "passasdasdasdasdasdddasdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddrd");
         String expectedResponseString = UserService.REGISTER_SUCCESS;
 
         mockMvc.perform( post(path)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content( objectMapper.writeValueAsString(userRequest) ))
+                        .content( objectMapper.writeValueAsString(user) ))
                 .andExpect( status().isBadRequest() );
     }
 
-    private UserRequest createUserRequest(String username, String email, String password) {
-        UserRequest userRequest = new UserRequest();
-        userRequest.setUsername(username);
-        userRequest.setEmail(email);
-        userRequest.setPassword(password);
-        return userRequest;
+    private User createUser(String username, String email, String password) {
+        User user = new User();
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPassword(password);
+        return user;
     }
 
     @Test

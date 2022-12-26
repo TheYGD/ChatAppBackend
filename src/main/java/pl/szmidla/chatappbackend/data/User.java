@@ -2,6 +2,11 @@ package pl.szmidla.chatappbackend.data;
 
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
+
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
@@ -16,10 +21,21 @@ import java.util.List;
 @Setter
 public class User extends BaseEntity implements UserDetails {
 
+    @NotNull
+    @Size(min=6, max=30)
+    @Pattern(regexp = "\\w+")
     private String username;
+
+    @NotNull
+    @Email
     private String email;
+
+    @NotNull
+    @Size(min=8, max=30)
+    @Pattern(regexp = "\\w+")
     private String password;
     // todo profile picture
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
