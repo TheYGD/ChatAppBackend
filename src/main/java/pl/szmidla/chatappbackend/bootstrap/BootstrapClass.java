@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import pl.szmidla.chatappbackend.data.User;
+import pl.szmidla.chatappbackend.repository.ChatRepository;
 import pl.szmidla.chatappbackend.service.UserService;
 
 @Component

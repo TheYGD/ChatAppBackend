@@ -1,16 +1,19 @@
 package pl.szmidla.chatappbackend.service;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.szmidla.chatappbackend.data.User;
+import pl.szmidla.chatappbackend.exception.ItemNotFoundException;
 import pl.szmidla.chatappbackend.repository.UserRepository;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class UserService {
 
     public static String REGISTER_SUCCESS = "Successfully registered.";
@@ -18,6 +21,14 @@ public class UserService {
     public static String REGISTER_USERNAME_TAKEN = "This username is already taken.";
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
+
+    public User getUserById(long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.error("User id={} not found", id);
+                    return new ItemNotFoundException("user");
+                });
+    }
 
     public String registerUser(User user) {
         if (userRepository.existsByEmail(user.getEmail())) {
