@@ -21,18 +21,8 @@ import java.util.List;
 @Setter
 public class User extends BaseEntity implements UserDetails {
 
-    @NotNull
-    @Size(min=6, max=30)
-    @Pattern(regexp = "\\w+")
     private String username;
-
-    @NotNull
-    @Email
     private String email;
-
-    @NotNull
-    @Size(min=8, max=30)
-    @Pattern(regexp = "\\w+")
     private String password;
     // todo profile picture
 
