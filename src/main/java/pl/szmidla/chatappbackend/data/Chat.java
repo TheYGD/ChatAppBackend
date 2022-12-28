@@ -3,12 +3,16 @@ package pl.szmidla.chatappbackend.data;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import lombok.Getter;
-import lombok.Setter;
+import javax.persistence.OneToOne;
+
+import lombok.*;
 
 @Entity
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Chat extends BaseEntity {
 
     @ManyToOne
@@ -18,6 +22,9 @@ public class Chat extends BaseEntity {
     @ManyToOne
     @JoinColumn(name="user2_id")
     private User user2;
+
+    @OneToOne
+    private Message lastMessage;
 
     private boolean closed;
 }

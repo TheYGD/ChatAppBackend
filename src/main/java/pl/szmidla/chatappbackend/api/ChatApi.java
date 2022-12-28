@@ -1,0 +1,54 @@
+package pl.szmidla.chatappbackend.api;
+
+import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+import pl.szmidla.chatappbackend.data.Chat;
+import pl.szmidla.chatappbackend.data.User;
+import pl.szmidla.chatappbackend.data.dto.ChatPreview;
+import pl.szmidla.chatappbackend.data.dto.MessageResponse;
+import pl.szmidla.chatappbackend.service.ChatService;
+
+@RestController
+@RequestMapping("/api/chats")
+@AllArgsConstructor
+public class ChatApi {
+
+    public static int CHATS_PAGE_SIZE = 10;
+    public static int MESSAGES_PAGE_SIZE = 15;
+
+    private ChatService chatService;
+
+
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public Page<ChatPreview> getUsersNChatPreviews(@RequestParam("lastId") long lastChatId,
+                                                   @RequestParam("lastDate") String lastChatDateString) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return chatService.getUsersNChatPreviews(user, lastChatId, lastChatDateString, CHATS_PAGE_SIZE);
+    }
+
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public Long createChat(@RequestParam long userId) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Chat createdChat = chatService.createChat(user, userId);
+        return createdChat.getId();
+    }
+
+    @GetMapping(value = "/{id}/messages", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Page<MessageResponse> getNMessagesFromChat(@PathVariable("id") long chatId,
+                                                      @RequestParam(defaultValue = "-1") int pageNr) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Page<MessageResponse> messages = chatService.getNMessagesFromChat(user, chatId, pageNr, MESSAGES_PAGE_SIZE);
+        return messages;
+    }
+
+    @PostMapping(value = "/{id}/messages", produces = MediaType.APPLICATION_JSON_VALUE)
+    public boolean sendMessage(@PathVariable("id") long chatId,
+                               @RequestParam String content) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        chatService.sendMessage(user, chatId, content);
+        return true;
+    }
+}
