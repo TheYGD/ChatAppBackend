@@ -8,8 +8,11 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import pl.szmidla.chatappbackend.data.Chat;
 import pl.szmidla.chatappbackend.data.User;
 import pl.szmidla.chatappbackend.repository.UserRepository;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -134,5 +137,16 @@ class UserServiceTest {
         boolean response = userService.emailExists(email);
 
         assertTrue(response);
+    }
+
+    @Test
+    void getUserById() {
+        User user = createUser("user", "sth@email.com", "password");
+        user.setId(1L);
+        when( userRepository.findById(user.getId()) ).thenReturn( Optional.of(user) );
+
+        User actualUser = userService.getUserById(user.getId());
+
+        assertEquals( user, actualUser );
     }
 }
