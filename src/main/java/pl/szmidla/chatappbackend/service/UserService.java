@@ -1,16 +1,20 @@
 package pl.szmidla.chatappbackend.service;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.szmidla.chatappbackend.data.User;
+import pl.szmidla.chatappbackend.data.dto.UserRequest;
+import pl.szmidla.chatappbackend.exception.ItemNotFoundException;
 import pl.szmidla.chatappbackend.repository.UserRepository;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class UserService {
 
     public static String REGISTER_SUCCESS = "Successfully registered.";
@@ -19,15 +23,24 @@ public class UserService {
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
 
-    public String registerUser(User user) {
-        if (userRepository.existsByEmail(user.getEmail())) {
+    public User getUserById(long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.error("User id={} not found", id);
+                    return new ItemNotFoundException("user");
+                });
+    }
+
+    public String registerUser(UserRequest userRequest) {
+        if (userRepository.existsByEmail(userRequest.getEmail())) {
             throw new IllegalArgumentException(REGISTER_EMAIL_TAKEN);
         }
-        if (userRepository.existsByUsername(user.getUsername())) {
+        if (userRepository.existsByUsername(userRequest.getUsername())) {
             throw new IllegalArgumentException(REGISTER_USERNAME_TAKEN);
         }
 
-        user.setPassword( passwordEncoder.encode(user.getPassword()) );
+        userRequest.setPassword( passwordEncoder.encode(userRequest.getPassword()) );
+        User user = userRequest.toUser();
         userRepository.save(user);
 
         return REGISTER_SUCCESS;
