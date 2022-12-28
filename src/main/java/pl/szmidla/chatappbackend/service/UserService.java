@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.szmidla.chatappbackend.data.User;
+import pl.szmidla.chatappbackend.data.dto.UserRequest;
 import pl.szmidla.chatappbackend.exception.ItemNotFoundException;
 import pl.szmidla.chatappbackend.repository.UserRepository;
 
@@ -30,15 +31,16 @@ public class UserService {
                 });
     }
 
-    public String registerUser(User user) {
-        if (userRepository.existsByEmail(user.getEmail())) {
+    public String registerUser(UserRequest userRequest) {
+        if (userRepository.existsByEmail(userRequest.getEmail())) {
             throw new IllegalArgumentException(REGISTER_EMAIL_TAKEN);
         }
-        if (userRepository.existsByUsername(user.getUsername())) {
+        if (userRepository.existsByUsername(userRequest.getUsername())) {
             throw new IllegalArgumentException(REGISTER_USERNAME_TAKEN);
         }
 
-        user.setPassword( passwordEncoder.encode(user.getPassword()) );
+        userRequest.setPassword( passwordEncoder.encode(userRequest.getPassword()) );
+        User user = userRequest.toUser();
         userRepository.save(user);
 
         return REGISTER_SUCCESS;

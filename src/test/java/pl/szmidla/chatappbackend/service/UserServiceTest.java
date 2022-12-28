@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import pl.szmidla.chatappbackend.data.Chat;
 import pl.szmidla.chatappbackend.data.User;
+import pl.szmidla.chatappbackend.data.dto.UserRequest;
 import pl.szmidla.chatappbackend.repository.UserRepository;
 
 import java.util.Optional;
@@ -31,7 +32,7 @@ class UserServiceTest {
 
     @Test
     void registerUserSuccess() {
-        User user = createUser("username1", "email@em.pl", "passW0rd");
+        UserRequest user = createUser("username1", "email@em.pl", "passW0rd");
         String expectedResponse = UserService.REGISTER_SUCCESS;
         when( userRepository.existsByEmail(anyString()) ).thenReturn( false );
         when( userRepository.existsByUsername(anyString()) ).thenReturn( false );
@@ -44,7 +45,7 @@ class UserServiceTest {
 
     @Test
     void registerUserEmailTaken() {
-        User user = createUser("username1", "email@em.pl", "passW0rd");
+        UserRequest user = createUser("username1", "email@em.pl", "passW0rd");
         String expectedResponse = UserService.REGISTER_EMAIL_TAKEN;
         when( userRepository.existsByEmail(anyString()) ).thenReturn( true );
 
@@ -56,7 +57,7 @@ class UserServiceTest {
 
     @Test
     void registerUserUsernameTaken() {
-        User user = createUser("username1", "email@em.pl", "passW0rd");
+        UserRequest user = createUser("username1", "email@em.pl", "passW0rd");
         String expectedResponse = UserService.REGISTER_USERNAME_TAKEN;
         when( userRepository.existsByEmail(anyString()) ).thenReturn( false );
         when( userRepository.existsByUsername(anyString()) ).thenReturn( true );
@@ -89,8 +90,8 @@ class UserServiceTest {
     }
 
 
-    private User createUser(String username, String email, String password) {
-        User user = new User();
+    private UserRequest createUser(String username, String email, String password) {
+        UserRequest user = new UserRequest();
         user.setUsername(username);
         user.setEmail(email);
         user.setPassword(password);
@@ -141,7 +142,7 @@ class UserServiceTest {
 
     @Test
     void getUserById() {
-        User user = createUser("user", "sth@email.com", "password");
+        User user = createUser("user", "sth@email.com", "password").toUser();
         user.setId(1L);
         when( userRepository.findById(user.getId()) ).thenReturn( Optional.of(user) );
 
