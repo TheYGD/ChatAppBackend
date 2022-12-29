@@ -23,8 +23,8 @@ public class ChatApi {
 
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public Page<ChatPreview> getUsersNChatPreviews(@RequestParam("lastId") long lastChatId,
-                                                   @RequestParam("lastDate") String lastChatDateString) {
+    public Page<ChatPreview> getUsersNChatPreviews(@RequestParam(value="lastId", defaultValue="-1") long lastChatId,
+                                                   @RequestParam(value = "lastDate", required = false) String lastChatDateString) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return chatService.getUsersNChatPreviews(user, lastChatId, lastChatDateString, CHATS_PAGE_SIZE);
     }

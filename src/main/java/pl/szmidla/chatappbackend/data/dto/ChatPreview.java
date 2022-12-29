@@ -19,6 +19,7 @@ import java.util.Date;
 @Setter
 public class ChatPreview {
 
+    private Long id;
     private Long usersId;
     private String usersName;
     // private String usersImageUrl
@@ -30,9 +31,12 @@ public class ChatPreview {
         String messageContent = chat.getLastMessage() != null ? chat.getLastMessage().getContent() : null;
         String shortDateString = chat.getLastMessage() != null ?
                 DateConverter.LocalDateTimeToShortString( chat.getLastMessage().getDate() ) : null;
-        return new ChatPreview(toBeInChatUser.getId(),
+        return new ChatPreview(
+                chat.getId(),
+                toBeInChatUser.getId(),
                 toBeInChatUser.getUsername(),
                 messageContent,
-                shortDateString);
+                shortDateString
+        );
     }
 }

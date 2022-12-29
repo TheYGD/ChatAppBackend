@@ -105,7 +105,8 @@ class ChatServiceTest {
         User user1 = createUser(2L, "user1", "email1@o2.pl", "password");
         List<Chat> chats = List.of( createChatObj(1L, loggedUser, user1, null),
                 createChatObj(2L, loggedUser, user1, null));
-        when( chatRepository.findAllByIdNotAndLastMessageDateBefore(any(), anyLong(), any()) )
+        when( chatRepository.findAllByUser1AndIdNotAndLastMessageDateBeforeOrUser2AndIdNotAndLastMessageDateBefore(
+                any(), anyLong(), any(), any(), anyLong(), any(), any()) )
                 .thenReturn( new PageImpl<>(chats) );
 
         List<ChatPreview> chatPreviews = chatService.getUsersNChatPreviews(loggedUser, 1L,
@@ -129,7 +130,7 @@ class ChatServiceTest {
     void createChat() {
         User user1 = createUser(2L, "user1", "email1@o2.pl", "password");
         when( userService.getUserById(user1.getId()) ).thenReturn( user1 );
-        when( chatRepository.existsByUser1IdOrUser2Id(anyLong(), anyLong()) ).thenReturn( false );
+        when( chatRepository.existsByUser1IdAndUser2Id(anyLong(), anyLong()) ).thenReturn( false );
 
         Chat chat = chatService.createChat(loggedUser, user1.getId());
 
@@ -149,7 +150,7 @@ class ChatServiceTest {
     void createChatAgain() {
         User user1 = createUser(2L, "user1", "email1@o2.pl", "password");
         when( userService.getUserById(user1.getId()) ).thenReturn( user1 );
-        when( chatRepository.existsByUser1IdOrUser2Id(anyLong(), anyLong()) ).thenReturn( true );
+        when( chatRepository.existsByUser1IdAndUser2Id(anyLong(), anyLong()) ).thenReturn( true );
 
         assertThrows( IllegalArgumentException.class, () -> chatService.createChat(loggedUser, user1.getId()));
     }

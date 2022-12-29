@@ -46,10 +46,19 @@ public class ChatService {
     }
 
     public Page<ChatPreview> getUsersNChatPreviews(User user, long lastChatId, String lastChatDateString, int pageSize) {
-        LocalDateTime lastChatDate = LocalDateTime.parse(lastChatDateString); // usunac Z z konca stringa w js
         Sort sortBy = Sort.by("lastMessage.date").descending();
         Pageable pageable = PageRequest.of(0, pageSize, sortBy);
-        return chatRepository.findAllByIdNotAndLastMessageDateBefore(pageable, lastChatId, lastChatDate).map( chat -> ChatPreview.fromChat(chat, user) );
+        Page<Chat> chatPage;
+
+        // is this 1 page without previous data?
+        if (lastChatId == -1) {
+            chatPage = chatRepository.findAllWithUser(user, pageable);
+        }
+        else {
+            LocalDateTime lastChatDate = LocalDateTime.parse(lastChatDateString); // usunac Z z konca stringa w js
+            chatPage = chatRepository.findAllWithUserBeforeGivenDateAndExceptId(user, lastChatDate, lastChatId, pageable);
+        }
+        return chatPage.map(chat -> ChatPreview.fromChat(chat, user));
     }
 
     @Transactional
@@ -61,8 +70,8 @@ public class ChatService {
         }
 
         User otherUser = userService.getUserById(otherUserId);
-        boolean chatAlreadyExists = chatRepository.existsByUser1IdOrUser2Id(thisUserId, otherUserId) ||
-                chatRepository.existsByUser1IdOrUser2Id(otherUserId, thisUserId);
+        boolean chatAlreadyExists = chatRepository.existsByUser1IdAndUser2Id(thisUserId, otherUserId) ||
+                chatRepository.existsByUser1IdAndUser2Id(otherUserId, thisUserId);
 
         if (chatAlreadyExists) {
             log.error("Invalid arguments in ChatService.createChat({}, {}), alreadyExists", thisUser.getId(), otherUserId);
