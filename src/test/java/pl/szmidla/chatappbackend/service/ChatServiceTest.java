@@ -101,20 +101,36 @@ class ChatServiceTest {
     }
 
     @Test
-    void getUsersNChatPreviews() {
+    void getUsersNChatPreviewsWithParams() {
         User user1 = createUser(2L, "user1", "email1@o2.pl", "password");
         List<Chat> chats = List.of( createChatObj(1L, loggedUser, user1, null),
                 createChatObj(2L, loggedUser, user1, null));
-        when( chatRepository.findAllWithUserBeforeGivenDateAndExceptId(
-                any(), any(), anyLong(), any()) )
+        when( chatRepository.findAllWithUserBeforeGivenDateAndExceptId(any(), any(), anyLong(), any()) )
                 .thenReturn( new PageImpl<>(chats) );
 
         List<ChatPreview> chatPreviews = chatService.getUsersNChatPreviews(loggedUser, 1L,
                 "2022-12-07T12:10:20", 10).getContent();
 
         assertEquals( chats.size(), chatPreviews.size() );
+        verify( chatRepository ).findAllWithUserBeforeGivenDateAndExceptId(any(), any(), anyLong(), any());
+        verify( chatRepository, times(0) ).findAllWithUser(any(), any());
     }
 
+    @Test
+    void getUsersNChatPreviewsWithoutParams() {
+        User user1 = createUser(2L, "user1", "email1@o2.pl", "password");
+        List<Chat> chats = List.of( createChatObj(1L, loggedUser, user1, null),
+                createChatObj(2L, loggedUser, user1, null));
+        when( chatRepository.findAllWithUser(any(), any()) ).thenReturn( new PageImpl<>(chats) );
+
+        List<ChatPreview> chatPreviews = chatService.getUsersNChatPreviews(loggedUser, -1L,
+                null, 10).getContent();
+
+        assertEquals( chats.size(), chatPreviews.size() );
+        verify( chatRepository, times(0) ).findAllWithUserBeforeGivenDateAndExceptId(any(),
+                any(), anyLong(), any());
+        verify( chatRepository ).findAllWithUser(any(), any());
+    }
 
     @Test
     void getUsersNChatPreviewsBadDate() {
