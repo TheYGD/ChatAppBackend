@@ -105,8 +105,8 @@ class ChatServiceTest {
         User user1 = createUser(2L, "user1", "email1@o2.pl", "password");
         List<Chat> chats = List.of( createChatObj(1L, loggedUser, user1, null),
                 createChatObj(2L, loggedUser, user1, null));
-        when( chatRepository.findAllByUser1AndIdNotAndLastMessageDateBeforeOrUser2AndIdNotAndLastMessageDateBefore(
-                any(), anyLong(), any(), any(), anyLong(), any(), any()) )
+        when( chatRepository.findAllWithUserBeforeGivenDateAndExceptId(
+                any(), any(), anyLong(), any()) )
                 .thenReturn( new PageImpl<>(chats) );
 
         List<ChatPreview> chatPreviews = chatService.getUsersNChatPreviews(loggedUser, 1L,
