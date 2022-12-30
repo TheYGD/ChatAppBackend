@@ -32,7 +32,7 @@ public class BootstrapClass implements CommandLineRunner {
         Chat chat = createChat(user1, user3);
         sendSomeMessages(chat);
 
-        //createALotOfUsersWithChats();
+        createALotOfUsersWithChats();
     }
 
     private void createALotOfUsersWithChats() {

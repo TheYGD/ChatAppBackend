@@ -25,6 +25,8 @@ public class Chat extends BaseEntity {
     @JoinColumn(name="user2_id")
     private User user2;
 
+    private Long firstMessageId;
+
     private String lastMessage;
     /** last message's date or date of creation the chat */
     private LocalDateTime lastDate;

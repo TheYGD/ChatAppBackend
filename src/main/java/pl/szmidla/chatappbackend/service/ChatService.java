@@ -80,6 +80,7 @@ public class ChatService {
                 .user1(thisUser)
                 .user2(otherUser)
                 .lastMessage(null)
+                .firstMessageId(null)
                 .lastDate(LocalDateTime.now())
                 .closed(false).build();
         chatRepository.save(chat);
@@ -111,6 +112,10 @@ public class ChatService {
         Chat chat = getChatByIdForUser(chatId, sender);
         Message message = createMessage(chat, sender, content);
         messageRepository.save(message);
+
+        if (chat.getFirstMessageId() == null) {
+            chat.setFirstMessageId(message.getId());
+        }
 
         chat.setLastMessage(message.getContent());
         chat.setLastDate(message.getDate());
