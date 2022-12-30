@@ -2,10 +2,7 @@ package pl.szmidla.chatappbackend.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import pl.szmidla.chatappbackend.data.Chat;
 import pl.szmidla.chatappbackend.data.Message;
@@ -16,8 +13,11 @@ import pl.szmidla.chatappbackend.exception.ItemNotFoundException;
 import pl.szmidla.chatappbackend.repository.ChatRepository;
 import pl.szmidla.chatappbackend.repository.MessageRepository;
 
+import javax.print.attribute.standard.PageRanges;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -45,10 +45,9 @@ public class ChatService {
         return chat;
     }
 
-    public Page<ChatPreview> getUsersNChatPreviews(User user, long lastChatId, String lastChatDateString, int pageSize) {
-        Sort sortBy = Sort.by("lastMessage.date").descending();
-        Pageable pageable = PageRequest.of(0, pageSize, sortBy);
-        Page<Chat> chatPage;
+    public List<ChatPreview> getUsersNChatPreviews(User user, long lastChatId, String lastChatDateString, int pageSize) {
+        Pageable pageable = PageRequest.of(0, pageSize);
+        List<Chat> chatPage;
 
         // is this 1 page without previous data?
         if (lastChatId == -1) {
@@ -58,7 +57,7 @@ public class ChatService {
             LocalDateTime lastChatDate = LocalDateTime.parse(lastChatDateString); // usunac Z z konca stringa w js
             chatPage = chatRepository.findAllWithUserBeforeGivenDateAndExceptId(user, lastChatDate, lastChatId, pageable);
         }
-        return chatPage.map(chat -> ChatPreview.fromChat(chat, user));
+        return chatPage.stream().map(chat -> ChatPreview.fromChat(chat, user)).toList();
     }
 
     @Transactional
@@ -81,6 +80,7 @@ public class ChatService {
                 .user1(thisUser)
                 .user2(otherUser)
                 .lastMessage(null)
+                .lastDate(LocalDateTime.now())
                 .closed(false).build();
         chatRepository.save(chat);
 
@@ -89,19 +89,21 @@ public class ChatService {
         return chat;
     }
 
-    /** @param pageNr use negative number to have it calculated */
-    public Page<MessageResponse> getNMessagesFromChat(User user, long chatId, int pageNr, int pageSize) {
+    /** @param lastMessageId use negative number to have it calculated */
+    public List<MessageResponse> getNMessagesFromChat(User user, long chatId, long lastMessageId, int pageSize) {
         Chat chat = getChatByIdForUser(chatId, user);
-        // we have to calculate the right pageNr
-        if (pageNr < 0) {
-            long pageCount = messageRepository.countByChat(chat);
-            pageNr = (int) Math.ceil((float) pageCount / pageSize) - 1;
+        List<Message> lastNMessages;
+        Pageable pageable = PageRequest.of(0, pageSize);
+
+        // we have to return most recent ones
+        if (lastMessageId < 0) {
+            lastNMessages = messageRepository.findLastNMessagesFromChat(chat.getId(), pageable);
         }
-
-        Pageable pageable = PageRequest.of(pageNr, pageSize);
-        Page<Message> messages = messageRepository.findAllByChatOrderByIdAsc(chat, pageable);
-
-        return messages.map( message -> MessageResponse.fromMessage(message, user) );
+        else {
+            lastNMessages = messageRepository.findLastNMessagesFromChatAfterId(chat.getId(), lastMessageId, pageable);
+        }
+        Collections.reverse(lastNMessages);
+        return lastNMessages.stream().map( message -> MessageResponse.fromMessage(message, user) ).toList();
     }
 
     @Transactional
@@ -110,7 +112,8 @@ public class ChatService {
         Message message = createMessage(chat, sender, content);
         messageRepository.save(message);
 
-        chat.setLastMessage(message);
+        chat.setLastMessage(message.getContent());
+        chat.setLastDate(message.getDate());
         chatRepository.save(chat);
 
         // todo WEBSOCKET ********************

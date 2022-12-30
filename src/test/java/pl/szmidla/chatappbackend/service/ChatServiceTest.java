@@ -17,6 +17,7 @@ import pl.szmidla.chatappbackend.repository.MessageRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
@@ -62,7 +63,8 @@ class ChatServiceTest {
         chat.setId(id);
         chat.setUser1(thisUser);
         chat.setUser2(otherUser);
-        chat.setLastMessage(lastMessage);
+        chat.setLastMessage( lastMessage == null ? null : lastMessage.getContent());
+        chat.setLastDate( lastMessage == null ? LocalDateTime.now() : lastMessage.getDate());
         chat.setClosed(false);
 
         if (lastMessage != null) {
@@ -106,10 +108,10 @@ class ChatServiceTest {
         List<Chat> chats = List.of( createChatObj(1L, loggedUser, user1, null),
                 createChatObj(2L, loggedUser, user1, null));
         when( chatRepository.findAllWithUserBeforeGivenDateAndExceptId(any(), any(), anyLong(), any()) )
-                .thenReturn( new PageImpl<>(chats) );
+                .thenReturn( chats );
 
         List<ChatPreview> chatPreviews = chatService.getUsersNChatPreviews(loggedUser, 1L,
-                "2022-12-07T12:10:20", 10).getContent();
+                "2022-12-07T12:10:20", 10);
 
         assertEquals( chats.size(), chatPreviews.size() );
         verify( chatRepository ).findAllWithUserBeforeGivenDateAndExceptId(any(), any(), anyLong(), any());
@@ -121,10 +123,10 @@ class ChatServiceTest {
         User user1 = createUser(2L, "user1", "email1@o2.pl", "password");
         List<Chat> chats = List.of( createChatObj(1L, loggedUser, user1, null),
                 createChatObj(2L, loggedUser, user1, null));
-        when( chatRepository.findAllWithUser(any(), any()) ).thenReturn( new PageImpl<>(chats) );
+        when( chatRepository.findAllWithUser(any(), any()) ).thenReturn( chats );
 
         List<ChatPreview> chatPreviews = chatService.getUsersNChatPreviews(loggedUser, -1L,
-                null, 10).getContent();
+                null, 10);
 
         assertEquals( chats.size(), chatPreviews.size() );
         verify( chatRepository, times(0) ).findAllWithUserBeforeGivenDateAndExceptId(any(),
@@ -134,12 +136,8 @@ class ChatServiceTest {
 
     @Test
     void getUsersNChatPreviewsBadDate() {
-        User user1 = createUser(2L, "user1", "email1@o2.pl", "password");
-        List<Chat> chats = List.of( createChatObj(1L, loggedUser, user1, null),
-                createChatObj(2L, loggedUser, user1, null));
-
         assertThrows( DateTimeParseException.class, () -> chatService.getUsersNChatPreviews(loggedUser, 1L,
-                "2022-12-07", 10).getContent());
+                "2022-12-07", 10));
     }
 
     @Test
@@ -172,51 +170,50 @@ class ChatServiceTest {
     }
 
     @Test
-    void getNMessagesFromChatWithoutPageNr() {
+    void getNMessagesFromChatWithoutLastMessageId() {
         User user1 = createUser(2L, "user1", "email1@o2.pl", "password");
         Chat chat = createChatObj(1L, loggedUser, user1, null);
-        List<Message> messages = List.of( createMessageNow("mess1", true, chat),
-                createMessageNow("mess2", false, chat),
-                createMessageNow("mess3", true, chat));
+        List<Message> messages = new LinkedList<>(List.of(createMessageNow(1L, "mess1", true, chat),
+                createMessageNow(2L, "mess2", false, chat),
+                createMessageNow(3L, "mess3", true, chat)));
         when( chatRepository.findById(chat.getId()) ).thenReturn(Optional.of(chat));
-        when(  messageRepository.countByChat(chat) ).thenReturn( 2L );
-        when( messageRepository.findAllByChatOrderByIdAsc(any(), any()) ).thenReturn( new PageImpl<>(messages) );
+        when( messageRepository.findLastNMessagesFromChat(any(), any()) ).thenReturn( messages );
 
         List<MessageResponse> messageResponses = chatService.getNMessagesFromChat(loggedUser, chat.getId(), -1,
-                10).getContent();
+                10);
 
         assertEquals( messages.size(), messageResponses.size() );
-        verify( messageRepository ).countByChat( chat );
         for (int i = 0; i < messages.size(); i++) {
             assertEquals( messages.get(i).getContent(), messageResponses.get(i).getContent() );
         }
     }
 
-    Message createMessageNow(String content, boolean byUser1, Chat chat) {
+    Message createMessageNow(long id, String content, boolean byUser1, Chat chat) {
         Message message = Message.builder()
                 .content(content)
                 .byUser1(byUser1)
                 .date(LocalDateTime.now())
                 .chat(chat).build();
-        chat.setLastMessage(message);
+        message.setId(id);
+        chat.setLastMessage(message.getContent());
+        chat.setLastDate(message.getDate());
         return message;
     }
 
     @Test
-    void getNMessagesFromChatWithPageNr() {
+    void getNMessagesFromChatWithLastMessageId() {
         User user1 = createUser(2L, "user1", "email1@o2.pl", "password");
         Chat chat = createChatObj(1L, loggedUser, user1, null);
-        List<Message> messages = List.of( createMessageNow("mess1", true, chat),
-                createMessageNow("mess2", false, chat),
-                createMessageNow("mess3", true, chat));
+        List<Message> messages = new LinkedList<>(List.of(createMessageNow(1L, "mess1", true, chat),
+                createMessageNow(2L, "mess2", false, chat),
+                createMessageNow(3L, "mess3", true, chat)));
         when( chatRepository.findById(chat.getId()) ).thenReturn(Optional.of(chat));
-        when( messageRepository.findAllByChatOrderByIdAsc(any(), any()) ).thenReturn( new PageImpl<>(messages) );
+        when( messageRepository.findLastNMessagesFromChatAfterId(anyLong(), anyLong(), any()) ).thenReturn( messages );
 
         List<MessageResponse> messageResponses = chatService.getNMessagesFromChat(loggedUser, chat.getId(), 1,
-                10).getContent();
+                10);
 
         assertEquals( messages.size(), messageResponses.size() );
-        verify( messageRepository, times(0) ).countByChat( chat );
         for (int i = 0; i < messages.size(); i++) {
             assertEquals( messages.get(i).getContent(), messageResponses.get(i).getContent() );
         }

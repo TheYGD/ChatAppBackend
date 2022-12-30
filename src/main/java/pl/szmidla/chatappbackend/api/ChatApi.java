@@ -11,6 +11,8 @@ import pl.szmidla.chatappbackend.data.dto.ChatPreview;
 import pl.szmidla.chatappbackend.data.dto.MessageResponse;
 import pl.szmidla.chatappbackend.service.ChatService;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/chats")
 @AllArgsConstructor
@@ -23,7 +25,7 @@ public class ChatApi {
 
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public Page<ChatPreview> getUsersNChatPreviews(@RequestParam(value="lastId", defaultValue="-1") long lastChatId,
+    public List<ChatPreview> getUsersNChatPreviews(@RequestParam(value="lastId", defaultValue="-1") long lastChatId,
                                                    @RequestParam(value = "lastDate", required = false) String lastChatDateString) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return chatService.getUsersNChatPreviews(user, lastChatId, lastChatDateString, CHATS_PAGE_SIZE);
@@ -37,10 +39,10 @@ public class ChatApi {
     }
 
     @GetMapping(value = "/{id}/messages", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Page<MessageResponse> getNMessagesFromChat(@PathVariable("id") long chatId,
-                                                      @RequestParam(defaultValue = "-1") int pageNr) {
+    public List<MessageResponse> getNMessagesFromChat(@PathVariable("id") long chatId,
+                                                      @RequestParam(defaultValue = "-1") long lastMessageId) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Page<MessageResponse> messages = chatService.getNMessagesFromChat(user, chatId, pageNr, MESSAGES_PAGE_SIZE);
+        List<MessageResponse> messages = chatService.getNMessagesFromChat(user, chatId, lastMessageId, MESSAGES_PAGE_SIZE);
         return messages;
     }
 

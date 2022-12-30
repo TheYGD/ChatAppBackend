@@ -64,14 +64,13 @@ class ChatApiTest {
     void getUsersNChatPreviews() throws Exception {
         User user2 = createUser(2L, "us2", "em", "pas");
         List<ChatPreview> chatPreviews = List.of(
-                createChatPreview(user2, createChatObj(1L, loggedUser, user2, createMessageNow("m1", true))),
-                createChatPreview(user2, createChatObj(2L, loggedUser, user2, createMessageNow("m2", true))));
-        Page<ChatPreview> expectedPage = new PageImpl<>(chatPreviews);
-        String expectedJson = new ObjectMapper().writeValueAsString(expectedPage);
+                createChatPreview(user2, createChatObj(1L, loggedUser, user2, createMessageNow(1L, "m1", true))),
+                createChatPreview(user2, createChatObj(2L, loggedUser, user2, createMessageNow(2L, "m2", true))));
+        String expectedJson = new ObjectMapper().writeValueAsString(chatPreviews);
         long lastChatId = 1L;
         String lastChatDateString = "mockDate";
         when( chatService.getUsersNChatPreviews(loggedUser, lastChatId, lastChatDateString, ChatApi.CHATS_PAGE_SIZE) )
-                .thenReturn( expectedPage );
+                .thenReturn( chatPreviews );
 
         String responseJson = mockMvc.perform( get("/api/chats")
                     .param("lastId", String.valueOf(lastChatId))
@@ -83,11 +82,13 @@ class ChatApiTest {
         assertEquals( expectedJson, responseJson );
     }
 
-    Message createMessageNow(String message, boolean byUser1) {
-        return Message.builder()
-                .content(message)
+    Message createMessageNow(long id, String content, boolean byUser1) {
+        Message message = Message.builder()
+                .content(content)
                 .byUser1(byUser1)
                 .date(LocalDateTime.now()).build();
+        message.setId(id);
+        return message;
     }
 
     Chat createChatObj(long id, User thisUser, User otherUser, Message lastMessage) {
@@ -95,7 +96,8 @@ class ChatApiTest {
         chat.setId(id);
         chat.setUser1(thisUser);
         chat.setUser2(otherUser);
-        chat.setLastMessage(lastMessage);
+        chat.setLastMessage( lastMessage == null ? null : lastMessage.getContent());
+        chat.setLastDate( lastMessage == null ? LocalDateTime.now() : lastMessage.getDate());
         chat.setClosed(false);
 
         if (lastMessage != null) {
@@ -125,17 +127,16 @@ class ChatApiTest {
     }
 
     @Test
-    void getNMessagesFromChatWithoutPageNr() throws Exception {
+    void getNMessagesFromChatWithoutLastMessageId() throws Exception {
         User user2 = createUser(2L, "us2", "em2", "pass");
         Chat chat = createChatObj(1L, loggedUser, user2, null);
         List<MessageResponse> messages = List.of(
-            createMessageResponseNowWithinChat("message1", loggedUser, chat),
-            createMessageResponseNowWithinChat("message2", user2, chat),
-            createMessageResponseNowWithinChat("message3", loggedUser, chat));
-        Page<MessageResponse> expectedPage = new PageImpl<>(messages);
-        String expectedJson = new ObjectMapper().writeValueAsString(expectedPage);
+            createMessageResponseNowWithinChat(1L, "message1", loggedUser, chat),
+            createMessageResponseNowWithinChat(2L, "message2", user2, chat),
+            createMessageResponseNowWithinChat(3L, "message3", loggedUser, chat));
+        String expectedJson = new ObjectMapper().writeValueAsString(messages);
         when( chatService.getNMessagesFromChat(loggedUser, chat.getId(), -1, ChatApi.MESSAGES_PAGE_SIZE) )
-                .thenReturn( expectedPage );
+                .thenReturn( messages );
 
         String responseJson = mockMvc.perform( get("/api/chats/{id}/messages", chat.getId()) )
                 .andExpect( status().isOk() )
@@ -146,21 +147,20 @@ class ChatApiTest {
     }
 
     @Test
-    void getNMessagesFromChatWithPageNr() throws Exception {
+    void getNMessagesFromChatWithLastMessageId() throws Exception {
         User user2 = createUser(2L, "us2", "em2", "pass");
         Chat chat = createChatObj(1L, loggedUser, user2, null);
         List<MessageResponse> messages = List.of(
-                createMessageResponseNowWithinChat("message1", loggedUser, chat),
-                createMessageResponseNowWithinChat("message2", user2, chat),
-                createMessageResponseNowWithinChat("message3", loggedUser, chat));
-        Page<MessageResponse> expectedPage = new PageImpl<>(messages);
-        int pageNr = 2;
-        String expectedJson = new ObjectMapper().writeValueAsString(expectedPage);
-        when( chatService.getNMessagesFromChat(loggedUser, chat.getId(), pageNr, ChatApi.MESSAGES_PAGE_SIZE) )
-                .thenReturn( expectedPage );
+                createMessageResponseNowWithinChat(1L, "message1", loggedUser, chat),
+                createMessageResponseNowWithinChat(2L, "message2", user2, chat),
+                createMessageResponseNowWithinChat(3L, "message3", loggedUser, chat));
+        String expectedJson = new ObjectMapper().writeValueAsString(messages);
+        long lastMessageId = 2L;
+        when( chatService.getNMessagesFromChat(loggedUser, chat.getId(), lastMessageId, ChatApi.MESSAGES_PAGE_SIZE) )
+                .thenReturn( messages );
 
         String responseJson = mockMvc.perform( get("/api/chats/{id}/messages", chat.getId())
-                        .param("pageNr", String.valueOf(pageNr) ) )
+                        .param("lastMessageId", String.valueOf(lastMessageId) ) )
                 .andExpect( status().isOk() )
                 .andExpect( content().contentType(MediaType.APPLICATION_JSON) )
                 .andReturn().getResponse().getContentAsString();
@@ -169,8 +169,8 @@ class ChatApiTest {
     }
 
 
-    MessageResponse createMessageResponseNowWithinChat(String content, User sender, Chat chat) {
-        Message message = createMessageNow(content, chat.getUser1().equals(sender));
+    MessageResponse createMessageResponseNowWithinChat(long id, String content, User sender, Chat chat) {
+        Message message = createMessageNow(id, content, chat.getUser1().equals(sender));
         message.setChat(chat);
         return MessageResponse.fromMessage( message, sender );
     }

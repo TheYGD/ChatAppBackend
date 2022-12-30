@@ -20,19 +20,20 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
         INNER JOIN c.user1 as u1
         INNER JOIN c.user2 as u2
         WHERE u1 = :user OR u2 =:user
+        ORDER BY c.lastDate DESC
     """)
-    Page<Chat> findAllWithUser(@Param("user") User user, Pageable pageable);
+    List<Chat> findAllWithUser(@Param("user") User user, Pageable pageable);
 
     @Query("""
         SELECT c FROM Chat c 
         INNER JOIN c.user1 as u1
         INNER JOIN c.user2 as u2
-        LEFT JOIN c.lastMessage  as m
         WHERE c.id <> :id AND 
-            (u1 = :user OR u2 =:user) AND
-            (m is NULL OR m.date < :date)
+              (u1 = :user OR u2 =:user) AND
+              c.lastDate <= :date
+        ORDER BY c.lastDate DESC
     """)
-    Page<Chat> findAllWithUserBeforeGivenDateAndExceptId(@Param("user") User user, @Param("date") LocalDateTime lastLoadedDate,
+    List<Chat> findAllWithUserBeforeGivenDateAndExceptId(@Param("user") User user, @Param("date") LocalDateTime lastLoadedDate,
                                                               @Param("id") long lastLoadedId, Pageable pageable);
     boolean existsByUser1IdAndUser2Id(long user1Id, long user2Id);
 }

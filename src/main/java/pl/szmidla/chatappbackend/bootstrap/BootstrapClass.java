@@ -31,6 +31,29 @@ public class BootstrapClass implements CommandLineRunner {
         createChat(user1, user2);
         Chat chat = createChat(user1, user3);
         sendSomeMessages(chat);
+
+        //createALotOfUsersWithChats();
+    }
+
+    private void createALotOfUsersWithChats() {
+        for (int i = 0; i < 20; i++) {
+            String username = i + randomString(8,15);
+            String email = "email@das.email" + i;
+            UserRequest userReq1 = createUser(username, email, "Haslo123");
+            userService.registerUser(userReq1);
+            User registered = userRepository.findByUsernameOrEmail(username, "").orElseThrow();
+            createChat(user1, registered);
+        }
+    }
+
+    String randomString(int min, int max) {
+        StringBuilder sb = new StringBuilder();
+        int n = (int)Math.round(Math.random() * (float)(max-min)) + min;
+        for (int i = 0; i < n; i++) {
+            char x = (char)((int)Math.round(Math.random() * (float)('z' - 'a')) + 'a');
+            sb.append( x );
+        }
+        return sb.toString();
     }
 
     private void sendSomeMessages(Chat chat) {
