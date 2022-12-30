@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class MessageResponse {
+
+    private long id;
     private String content;
     private String date;
     private boolean sent;
@@ -22,6 +24,7 @@ public class MessageResponse {
                 !message.isByUser1() && message.getChat().getUser2().equals(user);
         String shortDateString = DateConverter.LocalDateTimeToShortString( message.getDate() );
         return MessageResponse.builder()
+                .id(message.getId())
                 .content(message.getContent())
                 .date(shortDateString)
                 .sent( sentByUser )

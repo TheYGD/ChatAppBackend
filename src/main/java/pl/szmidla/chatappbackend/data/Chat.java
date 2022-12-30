@@ -7,6 +7,8 @@ import javax.persistence.OneToOne;
 
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Setter
@@ -23,8 +25,9 @@ public class Chat extends BaseEntity {
     @JoinColumn(name="user2_id")
     private User user2;
 
-    @OneToOne
-    private Message lastMessage;
+    private String lastMessage;
+    /** last message's date or date of creation the chat */
+    private LocalDateTime lastDate;
 
     private boolean closed;
 }

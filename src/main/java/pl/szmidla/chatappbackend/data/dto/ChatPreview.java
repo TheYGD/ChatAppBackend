@@ -24,19 +24,17 @@ public class ChatPreview {
     private String usersName;
     // private String usersImageUrl
     private String message; // last message
-    private String date; // date of last message, date + time without nanoseconds
+    private String date; // date of last message or creation time    LocalDateTime.toString()
 
     public static ChatPreview fromChat(Chat chat, User receiver) {
         User toBeInChatUser = chat.getUser1().equals(receiver) ? chat.getUser2() : chat.getUser1();
-        String messageContent = chat.getLastMessage() != null ? chat.getLastMessage().getContent() : null;
-        String shortDateString = chat.getLastMessage() != null ?
-                DateConverter.LocalDateTimeToShortString( chat.getLastMessage().getDate() ) : null;
+        String messageContent = chat.getLastMessage();
         return new ChatPreview(
                 chat.getId(),
                 toBeInChatUser.getId(),
                 toBeInChatUser.getUsername(),
                 messageContent,
-                shortDateString
+                chat.getLastDate().toString()
         );
     }
 }
