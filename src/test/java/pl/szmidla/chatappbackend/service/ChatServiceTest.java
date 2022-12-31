@@ -5,7 +5,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
 import pl.szmidla.chatappbackend.data.Chat;
 import pl.szmidla.chatappbackend.data.Message;
 import pl.szmidla.chatappbackend.data.User;
@@ -14,6 +13,7 @@ import pl.szmidla.chatappbackend.data.dto.MessageResponse;
 import pl.szmidla.chatappbackend.exception.ItemNotFoundException;
 import pl.szmidla.chatappbackend.repository.ChatRepository;
 import pl.szmidla.chatappbackend.repository.MessageRepository;
+import pl.szmidla.chatappbackend.websocket.ChatWebSocketController;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
@@ -34,6 +34,8 @@ class ChatServiceTest {
     MessageRepository messageRepository;
     @Mock
     UserService userService;
+    @Mock
+    ChatWebSocketController chatWebSocketController;
     @InjectMocks
     ChatService chatService;
     User loggedUser = createUser(1L, "username", "em@ai.l", "password");
@@ -153,11 +155,14 @@ class ChatServiceTest {
         assertEquals( null, chat.getLastMessage() );
         assertEquals( false, chat.isClosed() );
         verify( chatRepository ).save( any() );
+        verify( chatWebSocketController, times(2) ).sendMessage((Chat) any(), any());
     }
 
     @Test
     void createChatWithThemselves() {
         assertThrows( IllegalArgumentException.class, () -> chatService.createChat(loggedUser, loggedUser.getId()));
+        verify( chatRepository, times(0) ).save( any() );
+        verify( chatWebSocketController, times(0) ).sendMessage((Chat) any(), any());
     }
 
     @Test
@@ -167,6 +172,8 @@ class ChatServiceTest {
         when( chatRepository.existsByUser1IdAndUser2Id(anyLong(), anyLong()) ).thenReturn( true );
 
         assertThrows( IllegalArgumentException.class, () -> chatService.createChat(loggedUser, user1.getId()));
+        verify( chatRepository, times(0) ).save( any() );
+        verify( chatWebSocketController, times(0) ).sendMessage((Chat) any(), any());
     }
 
     @Test
@@ -229,6 +236,7 @@ class ChatServiceTest {
 
         verify( messageRepository ).save( any() );
         verify( chatRepository ).save( any() );
+        verify( chatWebSocketController, times(2) ).sendMessage((Message) any(), any());
     }
 
     @Test
@@ -243,5 +251,6 @@ class ChatServiceTest {
 
         verify( messageRepository, times(0) ).save( any() );
         verify( chatRepository , times(0)).save( any() );
+        verify( chatWebSocketController, times(0) ).sendMessage((Message) any(), any());
     }
 }
