@@ -35,8 +35,10 @@ public class SecurityConfig {
         http.authorizeHttpRequests( requests -> requests
                 .antMatchers("/api/login/**").permitAll()
                 .antMatchers("/api/register/**").permitAll()
+                .antMatchers("/ws/**").permitAll()
                 .anyRequest().authenticated());
         http.addFilter(jwtAuthenticationFilter);
+        http.addFilterBefore(new CORSFilter(), UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(new MyAuthorizationFilter(userDetailsService, propertiesConfig), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
