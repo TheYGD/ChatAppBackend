@@ -8,6 +8,7 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import pl.szmidla.chatappbackend.data.Chat;
 import pl.szmidla.chatappbackend.data.User;
 import pl.szmidla.chatappbackend.data.dto.UserRequest;
 import pl.szmidla.chatappbackend.repository.UserRepository;
