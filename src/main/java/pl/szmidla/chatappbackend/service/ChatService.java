@@ -12,8 +12,8 @@ import pl.szmidla.chatappbackend.data.dto.MessageResponse;
 import pl.szmidla.chatappbackend.exception.ItemNotFoundException;
 import pl.szmidla.chatappbackend.repository.ChatRepository;
 import pl.szmidla.chatappbackend.repository.MessageRepository;
+import pl.szmidla.chatappbackend.websocket.ChatWebSocketController;
 
-import javax.print.attribute.standard.PageRanges;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -27,6 +27,7 @@ public class ChatService {
     private UserService userService;
     private ChatRepository chatRepository;
     private MessageRepository messageRepository;
+    private ChatWebSocketController chatWebSocketController;
 
     public Chat getChatById(long id) {
         return chatRepository.findById(id)
@@ -85,7 +86,9 @@ public class ChatService {
                 .closed(false).build();
         chatRepository.save(chat);
 
-        // todo WEBSOCKET ********************
+        // WebSocket
+        chatWebSocketController.sendMessage(chat, chat.getUser1());
+        chatWebSocketController.sendMessage(chat, chat.getUser2());
 
         return chat;
     }
@@ -109,6 +112,10 @@ public class ChatService {
 
     @Transactional
     public void sendMessage(User sender, long chatId, String content) {
+        if (!isMessageContentValid(content)) {
+            return;
+        }
+
         Chat chat = getChatByIdForUser(chatId, sender);
         Message message = createMessage(chat, sender, content);
         messageRepository.save(message);
@@ -121,7 +128,13 @@ public class ChatService {
         chat.setLastDate(message.getDate());
         chatRepository.save(chat);
 
-        // todo WEBSOCKET ********************
+        // WebSocket
+        chatWebSocketController.sendMessage(message, chat.getUser1());
+        chatWebSocketController.sendMessage(message, chat.getUser2());
+    }
+
+    private boolean isMessageContentValid(String content) {
+        return content.length() > 0 && content.length() < 10000;
     }
 
     private Message createMessage(Chat chat, User sender, String content) {
