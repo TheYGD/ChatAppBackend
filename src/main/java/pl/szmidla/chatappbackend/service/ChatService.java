@@ -9,6 +9,7 @@ import pl.szmidla.chatappbackend.data.Message;
 import pl.szmidla.chatappbackend.data.User;
 import pl.szmidla.chatappbackend.data.dto.ChatPreview;
 import pl.szmidla.chatappbackend.data.dto.MessageResponse;
+import pl.szmidla.chatappbackend.exception.ItemAlreadyExistsException;
 import pl.szmidla.chatappbackend.exception.ItemNotFoundException;
 import pl.szmidla.chatappbackend.repository.ChatRepository;
 import pl.szmidla.chatappbackend.repository.MessageRepository;
@@ -75,7 +76,7 @@ public class ChatService {
 
         if (chatAlreadyExists) {
             log.error("Invalid arguments in ChatService.createChat({}, {}), alreadyExists", thisUser.getId(), otherUserId);
-            throw new IllegalArgumentException("Invalid operation");
+            throw new ItemAlreadyExistsException("chat");
         }
         Chat chat = Chat.builder()
                 .user1(thisUser)

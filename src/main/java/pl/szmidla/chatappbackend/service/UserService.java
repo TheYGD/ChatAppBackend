@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.szmidla.chatappbackend.data.User;
 import pl.szmidla.chatappbackend.data.dto.UserRequest;
+import pl.szmidla.chatappbackend.data.dto.UserResponse;
 import pl.szmidla.chatappbackend.exception.ItemNotFoundException;
 import pl.szmidla.chatappbackend.repository.UserRepository;
 
@@ -46,12 +47,13 @@ public class UserService {
         return REGISTER_SUCCESS;
     }
 
-    public Page<User> getNUsersByPhrase(String phrase, int pageNr, int pageSize) {
+    public Page<UserResponse> getNUsersByPhrase(String phrase, int pageNr, int pageSize) {
         if (pageNr < 0) {
             throw new IllegalArgumentException("pageNr < 0");
         }
         Pageable usersPage = PageRequest.of(pageNr, pageSize);
-        return userRepository.findAllByUsernameContainingIgnoreCase(phrase, usersPage);
+        return userRepository.findAllByUsernameContainingIgnoreCase(phrase, usersPage)
+                .map(UserResponse::fromUser);
     }
 
     public boolean usernameExists(String username) {

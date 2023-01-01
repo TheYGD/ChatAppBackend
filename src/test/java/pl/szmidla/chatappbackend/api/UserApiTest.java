@@ -50,7 +50,8 @@ class UserApiTest {
         when( userService.getNUsersByPhrase( anyString(), anyInt(), anyInt()) ).thenReturn( page );
 
         String actualResponseString = mockMvc.perform( get(path)
-                        .param("phrase", phrase))
+                        .param("phrase", phrase)
+                        .param("pageNr", "1"))
                 .andExpect( status().isOk() )
                 .andExpect( content().contentType(MediaType.APPLICATION_JSON) )
                 .andReturn().getResponse().getContentAsString();

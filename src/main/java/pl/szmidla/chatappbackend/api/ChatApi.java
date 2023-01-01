@@ -32,7 +32,7 @@ public class ChatApi {
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public Long createChat(@RequestParam long userId) {
+    public Long createChat(@RequestParam("id") long userId) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Chat createdChat = chatService.createChat(user, userId);
         return createdChat.getId();
