@@ -118,7 +118,7 @@ class ChatApiTest {
         when( chatService.createChat(loggedUser, user2.getId()) ).thenReturn( chat );
 
         String responseJson = mockMvc.perform( post("/api/chats")
-                        .param("userId", String.valueOf(user2.getId())))
+                        .param("id", String.valueOf(user2.getId())))
                 .andExpect( status().isOk() )
                 .andExpect( content().contentType(MediaType.APPLICATION_JSON) )
                 .andReturn().getResponse().getContentAsString();

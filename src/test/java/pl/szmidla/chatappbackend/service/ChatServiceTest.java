@@ -10,6 +10,7 @@ import pl.szmidla.chatappbackend.data.Message;
 import pl.szmidla.chatappbackend.data.User;
 import pl.szmidla.chatappbackend.data.dto.ChatPreview;
 import pl.szmidla.chatappbackend.data.dto.MessageResponse;
+import pl.szmidla.chatappbackend.exception.ItemAlreadyExistsException;
 import pl.szmidla.chatappbackend.exception.ItemNotFoundException;
 import pl.szmidla.chatappbackend.repository.ChatRepository;
 import pl.szmidla.chatappbackend.repository.MessageRepository;
@@ -171,7 +172,7 @@ class ChatServiceTest {
         when( userService.getUserById(user1.getId()) ).thenReturn( user1 );
         when( chatRepository.existsByUser1IdAndUser2Id(anyLong(), anyLong()) ).thenReturn( true );
 
-        assertThrows( IllegalArgumentException.class, () -> chatService.createChat(loggedUser, user1.getId()));
+        assertThrows( ItemAlreadyExistsException.class, () -> chatService.createChat(loggedUser, user1.getId()));
         verify( chatRepository, times(0) ).save( any() );
         verify( chatWebSocketController, times(0) ).sendMessage((Chat) any(), any());
     }
