@@ -1,18 +1,14 @@
 package pl.szmidla.chatappbackend.bootstrap;
 
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import pl.szmidla.chatappbackend.data.Chat;
-import pl.szmidla.chatappbackend.data.Message;
 import pl.szmidla.chatappbackend.data.User;
 import pl.szmidla.chatappbackend.data.dto.UserRequest;
 import pl.szmidla.chatappbackend.repository.UserRepository;
 import pl.szmidla.chatappbackend.service.ChatService;
 import pl.szmidla.chatappbackend.service.UserService;
-
-import java.time.LocalDateTime;
 
 @Component
 @RequiredArgsConstructor
@@ -27,17 +23,19 @@ public class BootstrapClass implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        registerUsers();
-        createChat(user1, user2);
-        Chat chat = createChat(user1, user3);
-        sendSomeMessages(chat);
+        if (userRepository.count() == 0) {
+            registerUsers();
+            createChat(user1, user2);
+            Chat chat = createChat(user1, user3);
+            sendSomeMessages(chat);
 
-        createALotOfUsersWithChats();
+            createALotOfUsersWithChats();
+        }
     }
 
     private void createALotOfUsersWithChats() {
-        for (int i = 0; i < 20; i++) {
-            String username = i + randomString(8,15);
+        for (int i = 0; i < 5; i++) {
+            String username = randomString(8,15);
             String email = "email@das.email" + i;
             UserRequest userReq1 = createUser(username, email, "Haslo123");
             userService.registerUser(userReq1);

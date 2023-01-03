@@ -2,8 +2,7 @@
 spring:
   jpa:
     hibernate:
-      ddl-auto: create-drop
-
+      ddl-auto: update
   datasource:
     url: jdbc:postgresql://localhost:5432/chatapp
     username: postgres
@@ -12,6 +11,9 @@ spring:
     init:
       mode: always
       platform: postgres
+  servlet:
+    multipart:
+      max-file-size: 10MB
 
 
 chat-app:
@@ -19,3 +21,6 @@ chat-app:
     jwt:
       secret: "jwtSecret123nosdfj"
       expiration-hours: 24
+
+aws:
+  bucket: "jszmidla-chatapp"

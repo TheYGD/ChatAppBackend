@@ -17,7 +17,7 @@ public class ChatPreview {
     private Long id;
     private Long usersId;
     private String usersName;
-    // private String usersImageUrl
+    private String usersImageUrl;
     private Long firstMessageId;
     private String message; // last message
     private String date; // date of last message or creation time    LocalDateTime.toString()
@@ -29,6 +29,7 @@ public class ChatPreview {
                 chat.getId(),
                 toBeInChatUser.getId(),
                 toBeInChatUser.getUsername(),
+                toBeInChatUser.getImageUrl(),
                 chat.getFirstMessageId(),
                 messageContent,
                 chat.getLastDate().toString()

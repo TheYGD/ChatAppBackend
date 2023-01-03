@@ -20,7 +20,7 @@ public class User extends BaseEntity implements UserDetails {
     private String username;
     private String email;
     private String password;
-    // todo profile picture
+    private String imageUrl;
 
 
     @Override

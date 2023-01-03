@@ -7,11 +7,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import pl.szmidla.chatappbackend.aws.AWSFileService;
 import pl.szmidla.chatappbackend.data.User;
 import pl.szmidla.chatappbackend.data.dto.UserRequest;
 import pl.szmidla.chatappbackend.data.dto.UserResponse;
 import pl.szmidla.chatappbackend.exception.ItemNotFoundException;
 import pl.szmidla.chatappbackend.repository.UserRepository;
+
+import java.io.File;
+import java.io.IOException;
 
 @Service
 @AllArgsConstructor
@@ -22,12 +26,22 @@ public class UserService {
     public static String REGISTER_EMAIL_TAKEN = "This email is already registered.";
     public static String REGISTER_USERNAME_TAKEN = "This username is already taken.";
     private UserRepository userRepository;
+    private FileService fileService;
     private PasswordEncoder passwordEncoder;
+
 
     public User getUserById(long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> {
                     log.error("User id={} not found", id);
+                    return new ItemNotFoundException("user");
+                });
+    }
+
+    public User getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> {
+                    log.error("User username={} not found", username);
                     return new ItemNotFoundException("user");
                 });
     }
