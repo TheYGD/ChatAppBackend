@@ -6,11 +6,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import pl.szmidla.chatappbackend.data.Chat;
 import pl.szmidla.chatappbackend.data.User;
-import pl.szmidla.chatappbackend.utils.DateConverter;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Date;
 
 /**  This class represents the chat previews on Chat page */
 @NoArgsConstructor
