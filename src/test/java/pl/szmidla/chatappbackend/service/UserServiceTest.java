@@ -2,17 +2,21 @@ package pl.szmidla.chatappbackend.service;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.multipart.MultipartFile;
+import pl.szmidla.chatappbackend.aws.FileService;
 import pl.szmidla.chatappbackend.data.Chat;
 import pl.szmidla.chatappbackend.data.User;
 import pl.szmidla.chatappbackend.data.dto.UserRequest;
+import pl.szmidla.chatappbackend.exception.ItemNotFoundException;
 import pl.szmidla.chatappbackend.repository.UserRepository;
 
+import java.io.IOException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -27,6 +31,8 @@ class UserServiceTest {
     UserRepository userRepository;
     @Spy
     PasswordEncoder passwordEncoder;
+    @Mock
+    FileService fileService;
     @InjectMocks
     UserService userService;
 
@@ -89,7 +95,6 @@ class UserServiceTest {
         assertThrows( IllegalArgumentException.class, () -> userService.getNUsersByPhrase(phrase, pageNr, pageSize) );
     }
 
-
     private UserRequest createUser(String username, String email, String password) {
         UserRequest user = new UserRequest();
         user.setUsername(username);
@@ -117,8 +122,6 @@ class UserServiceTest {
 
         assertTrue(response);
     }
-
-
 
     @Test
     void emailExistsNo() {
@@ -149,5 +152,59 @@ class UserServiceTest {
         User actualUser = userService.getUserById(user.getId());
 
         assertEquals( user, actualUser );
+    }
+
+    @Test
+    void getUserByIdException() {
+        User user = createUser("user", "sth@email.com", "password").toUser();
+        user.setId(1L);
+        when( userRepository.findById(user.getId()) ).thenThrow( new ItemNotFoundException() );
+
+        assertThrows(ItemNotFoundException.class, () -> userService.getUserById(user.getId()));
+    }
+
+    @Test
+    void getUserByUsername() {
+        User user = createUser("user", "sth@email.com", "password").toUser();
+        when( userRepository.findByUsername(user.getUsername()) ).thenReturn( Optional.of(user) );
+
+        User actualUser = userService.getUserByUsername(user.getUsername());
+
+        assertEquals( user, actualUser );
+    }
+
+    @Test
+    void getUserByUsernameException() {
+        User user = createUser("user", "sth@email.com", "password").toUser();
+        user.setId(1L);
+        when(userRepository.findByUsername(user.getUsername())).thenThrow(new ItemNotFoundException());
+
+        assertThrows(ItemNotFoundException.class, () -> userService.getUserByUsername(user.getUsername()));
+    }
+
+    @Test
+    void loadImageForUsername() throws IOException {
+        User user = createUser("user", "sth@email.com", "password").toUser();
+        user.setImageUrl("some url");
+        ArgumentCaptor<String> stringCaptor = ArgumentCaptor.forClass(String.class);
+        byte[] byteArray = new byte[]{1,2};
+        when( userRepository.findByUsername(user.getUsername()) ).thenReturn( Optional.of(user) );
+        when( fileService.download(stringCaptor.capture() ) ).thenReturn( byteArray );
+
+        byte[] actualResponse = userService.loadImageForUsername(user.getUsername());
+
+        assertEquals( byteArray.length, actualResponse.length );
+        for (int i = 0; i < byteArray.length; i++) {
+            assertEquals( byteArray[i], actualResponse[i] );
+        }
+    }
+
+    @Test
+    void loadImageForUsernameNullImage() {
+        User user = createUser("user", "sth@email.com", "password").toUser();
+        when( userRepository.findByUsername(user.getUsername()) ).thenReturn( Optional.of(user) );
+
+        byte[] actualResponse = userService.loadImageForUsername(user.getUsername());
+        assertEquals( 0, actualResponse.length );
     }
 }

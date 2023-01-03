@@ -28,4 +28,9 @@ public class UserApi {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return user.getUsername();
     }
+
+    @GetMapping("/users/{username}/image")
+    public byte[] downloadUsersImage(@PathVariable String username) {
+        return userService.loadImageForUsername(username);
+    }
 }
