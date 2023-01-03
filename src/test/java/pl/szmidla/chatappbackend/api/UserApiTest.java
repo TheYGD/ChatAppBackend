@@ -87,21 +87,4 @@ class UserApiTest {
         when( auth.getPrincipal() ).thenReturn(user);
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
-
-    @Test
-    void downloadUsersImage() throws Exception {
-        User user = createUser("username", "email@email.com", "password");
-        String path = "/api/users/" + user.getUsername() + "/image";
-        byte[] byteArray = new byte[]{1,2,3};
-        when( userService.loadImageForUsername(user.getUsername()) ).thenReturn( byteArray );
-
-        byte[] actualResponse = mockMvc.perform( get(path) )
-                .andExpect( status().isOk() )
-                .andReturn().getResponse().getContentAsByteArray();
-
-        assertEquals( byteArray.length, actualResponse.length );
-        for (int i = 0; i < byteArray.length; i++) {
-            assertEquals( byteArray[i], actualResponse[i] );
-        }
-    }
 }

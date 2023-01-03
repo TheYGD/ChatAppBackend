@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.springframework.http.MediaType.IMAGE_JPEG_VALUE;
 import static org.springframework.http.MediaType.IMAGE_PNG_VALUE;
@@ -43,7 +44,9 @@ public class ProfileService {
         metadata.put("Content-Type", file.getContentType());
         metadata.put("Content-Length", String.valueOf(file.getSize()));
 
-        String pathFileName = "users/images/" + user.getId() + "/" + file.getOriginalFilename();
+        String extension = file.getOriginalFilename().substring( file.getOriginalFilename().lastIndexOf('.') );
+        String fileName = UUID.randomUUID() + extension;
+        String pathFileName = "images/" + fileName;
         try {
             fileService.save(pathFileName, metadata, file.getInputStream());
         } catch (IOException e) {
@@ -51,7 +54,7 @@ public class ProfileService {
             throw new IllegalArgumentException("File must be an image!");
         }
 
-        user.setImageUrl(pathFileName);
+        user.setImageUrl(fileName);
     }
 
     private void checkIfImageIsValidElseThrow(User user, MultipartFile file) {

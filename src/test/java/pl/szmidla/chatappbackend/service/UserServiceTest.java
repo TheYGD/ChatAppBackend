@@ -177,30 +177,4 @@ class UserServiceTest {
 
         assertThrows(ItemNotFoundException.class, () -> userService.getUserByUsername(user.getUsername()));
     }
-
-    @Test
-    void loadImageForUsername() throws IOException {
-        User user = createUser("user", "sth@email.com", "password").toUser();
-        user.setImageUrl("some url");
-        ArgumentCaptor<String> stringCaptor = ArgumentCaptor.forClass(String.class);
-        byte[] byteArray = new byte[]{1,2};
-        when( userRepository.findByUsername(user.getUsername()) ).thenReturn( Optional.of(user) );
-        when( fileService.download(stringCaptor.capture() ) ).thenReturn( byteArray );
-
-        byte[] actualResponse = userService.loadImageForUsername(user.getUsername());
-
-        assertEquals( byteArray.length, actualResponse.length );
-        for (int i = 0; i < byteArray.length; i++) {
-            assertEquals( byteArray[i], actualResponse[i] );
-        }
-    }
-
-    @Test
-    void loadImageForUsernameNullImage() {
-        User user = createUser("user", "sth@email.com", "password").toUser();
-        when( userRepository.findByUsername(user.getUsername()) ).thenReturn( Optional.of(user) );
-
-        byte[] actualResponse = userService.loadImageForUsername(user.getUsername());
-        assertEquals( 0, actualResponse.length );
-    }
 }

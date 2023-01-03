@@ -41,15 +41,13 @@ class ProfileServiceTest {
     @Test
     void uploadUserImageFirstImage() throws IOException {
         User user = Mockito.spy(createUser("user", "sth@email.com", "password").toUser());
-        MultipartFile file = Mockito.spy(new MockMultipartFile("my-file", new byte[]{1,2,3}));
-        String expectedPathFileName = "users/images/" + user.getId() + "/"  + file.getOriginalFilename();
-        when( file.getContentType() ).thenReturn(MediaType.IMAGE_PNG_VALUE);
+        MultipartFile file = Mockito.spy(new MockMultipartFile("my-file.png", "my-file.png",
+                MediaType.IMAGE_PNG_VALUE, new byte[]{1,2,3}));
 
         profileService.uploadUserImage(user, file);
 
         verify( fileService ).save( any(), any(), any() );
         verify( fileService, times(0) ).remove( user.getImageUrl() );
-        verify( user ).setImageUrl( expectedPathFileName );
         verify( userRepository ).save( user );
     }
 
@@ -58,9 +56,8 @@ class ProfileServiceTest {
         User user = Mockito.spy(createUser("user", "sth@email.com", "password").toUser());
         String expectedUrl = "some/url/prev.jpg";
         user.setImageUrl(expectedUrl);
-        MultipartFile file = Mockito.spy(new MockMultipartFile("my-file", new byte[]{1,2,3}));
-        String expectedPathFileName = "users/images/" + user.getId() + "/"  + file.getOriginalFilename();
-        when( file.getContentType() ).thenReturn(MediaType.IMAGE_PNG_VALUE);
+        MultipartFile file = Mockito.spy(new MockMultipartFile("my-file.png", "my-file.png",
+                MediaType.IMAGE_PNG_VALUE, new byte[]{1,2,3}));
 
 
         profileService.uploadUserImage(user, file);
@@ -68,7 +65,6 @@ class ProfileServiceTest {
         verify( fileService ).save( any(), any(), any() );
         verify( fileService ).remove( expectedUrl );
         verify( user ).setImageUrl( null );
-        verify( user ).setImageUrl( expectedPathFileName );
         verify( userRepository ).save( user );
     }
 

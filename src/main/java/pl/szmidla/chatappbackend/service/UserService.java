@@ -77,21 +77,4 @@ public class UserService {
     public boolean emailExists(String email) {
         return userRepository.existsByEmail(email);
     }
-
-    public byte[] loadImageForUsername(String username) {
-        User user = getUserByUsername(username);
-        return loadUsersImage(user);
-    }
-
-    private byte[] loadUsersImage(User user) {
-        if (user.getImageUrl() != null) {
-            try {
-                return fileService.download(user.getImageUrl());
-            } catch (IOException e) {
-                log.error("Failed to load user's image, userId={}", user.getId());
-                throw new RuntimeException(e);
-            }
-        }
-        else return new byte[0];
-    }
 }

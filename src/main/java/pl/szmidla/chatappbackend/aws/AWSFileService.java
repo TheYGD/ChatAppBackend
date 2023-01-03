@@ -3,6 +3,7 @@ package pl.szmidla.chatappbackend.aws;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import pl.szmidla.chatappbackend.service.FileService;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -15,6 +16,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
+
+@Profile("aws")
 @Service
 @RequiredArgsConstructor
 @Slf4j
