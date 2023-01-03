@@ -5,8 +5,6 @@ import pl.szmidla.chatappbackend.data.Message;
 import pl.szmidla.chatappbackend.data.User;
 import pl.szmidla.chatappbackend.utils.DateConverter;
 
-import java.time.LocalDateTime;
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

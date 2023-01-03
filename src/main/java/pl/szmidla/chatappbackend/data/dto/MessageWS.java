@@ -4,7 +4,6 @@ import lombok.*;
 import pl.szmidla.chatappbackend.data.Chat;
 import pl.szmidla.chatappbackend.data.Message;
 import pl.szmidla.chatappbackend.data.User;
-import pl.szmidla.chatappbackend.utils.DateConverter;
 
 @NoArgsConstructor
 @AllArgsConstructor
