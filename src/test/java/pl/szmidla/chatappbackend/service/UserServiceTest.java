@@ -5,12 +5,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.multipart.MultipartFile;
-import pl.szmidla.chatappbackend.aws.FileService;
-import pl.szmidla.chatappbackend.data.Chat;
+import pl.szmidla.chatappbackend.aws.AWSFileService;
 import pl.szmidla.chatappbackend.data.User;
 import pl.szmidla.chatappbackend.data.dto.UserRequest;
 import pl.szmidla.chatappbackend.exception.ItemNotFoundException;
@@ -32,7 +28,7 @@ class UserServiceTest {
     @Spy
     PasswordEncoder passwordEncoder;
     @Mock
-    FileService fileService;
+    AWSFileService fileService;
     @InjectMocks
     UserService userService;
 
