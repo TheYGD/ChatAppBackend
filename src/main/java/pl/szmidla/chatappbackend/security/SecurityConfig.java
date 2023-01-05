@@ -13,6 +13,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import pl.szmidla.chatappbackend.config.PropertiesConfig;
+import pl.szmidla.chatappbackend.security.jwt.JWTAuthenticationFilter;
+import pl.szmidla.chatappbackend.security.jwt.JWTExtractor;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
@@ -23,7 +25,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authenticationManager,
-                                                   PropertiesConfig propertiesConfig, UserDetailsServiceImpl userDetailsService) throws Exception {
+                                                   PropertiesConfig propertiesConfig, JWTExtractor jwtExtractor,
+                                                   UserDetailsServiceImpl userDetailsService) throws Exception {
         JWTAuthenticationFilter jwtAuthenticationFilter = new JWTAuthenticationFilter(authenticationManager, propertiesConfig);
         jwtAuthenticationFilter.setFilterProcessesUrl("/api/login");
 
@@ -39,7 +42,7 @@ public class SecurityConfig {
                 .anyRequest().authenticated());
         http.addFilter(jwtAuthenticationFilter);
         http.addFilterBefore(new CORSFilter(), UsernamePasswordAuthenticationFilter.class);
-        http.addFilterBefore(new MyAuthorizationFilter(userDetailsService, propertiesConfig), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(new MyAuthorizationFilter(jwtExtractor, userDetailsService), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

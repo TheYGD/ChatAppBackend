@@ -1,4 +1,4 @@
-package pl.szmidla.chatappbackend.security;
+package pl.szmidla.chatappbackend.security.jwt;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
