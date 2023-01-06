@@ -8,6 +8,7 @@ import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -21,6 +22,7 @@ public class User extends BaseEntity implements UserDetails {
     private String email;
     private String password;
     private String imageUrl;
+    private LocalDateTime lastActive;
 
 
     @Override

@@ -9,6 +9,9 @@ import pl.szmidla.chatappbackend.data.User;
 import pl.szmidla.chatappbackend.data.dto.UserResponse;
 import pl.szmidla.chatappbackend.service.UserService;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api")
@@ -27,5 +30,10 @@ public class UserApi {
     public String getUsernameFromJWT() {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return user.getUsername();
+    }
+
+    @GetMapping(value = "/users-active-status", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<Long, String> getUsersActiveStatuses(@RequestParam List<Long> usersIds) {
+        return userService.getUsersActiveStatuses(usersIds);
     }
 }

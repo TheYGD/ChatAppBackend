@@ -11,14 +11,14 @@ public class CORSFilter extends OncePerRequestFilter {
 
     final static String FRONTEND_ORIGIN = "http://localhost:5173";
 
-    public void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+    public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String origin = req.getHeader("Origin");
+        String origin = request.getHeader("Origin");
         if (origin.equals(FRONTEND_ORIGIN)) {
-            res.setHeader("Access-Control-Allow-Origin", FRONTEND_ORIGIN);
-            res.setHeader("Access-Control-Allow-Credentials", "true");
+            response.setHeader("Access-Control-Allow-Origin", FRONTEND_ORIGIN);
+            response.setHeader("Access-Control-Allow-Credentials", "true");
         }
-        chain.doFilter(req, res);
+        filterChain.doFilter(request, response);
     }
 }
