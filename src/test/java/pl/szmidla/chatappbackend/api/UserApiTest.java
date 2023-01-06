@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import pl.szmidla.chatappbackend.data.User;
 import pl.szmidla.chatappbackend.service.UserService;
 
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
@@ -86,5 +87,22 @@ class UserApiTest {
         Authentication auth = Mockito.spy(Authentication.class);
         when( auth.getPrincipal() ).thenReturn(user);
         SecurityContextHolder.getContext().setAuthentication(auth);
+    }
+
+    @Test
+    void getUsersActiveStatuses() throws Exception {
+        String path = "/api/users-active-status";
+        long userId = 1L;
+        Map<Long, String> expectedResponse = Map.of(userId, "2023-01-06T20:39:00");
+        String responseJson = objectMapper.writeValueAsString(expectedResponse);
+        when( userService.getUsersActiveStatuses(any()) ).thenReturn( expectedResponse );
+
+        String actualResponse = mockMvc.perform( get(path)
+                        .param("usersIds", String.valueOf(userId)))
+                .andExpect( status().isOk() )
+                .andExpect( content().contentType(MediaType.APPLICATION_JSON) )
+                .andReturn().getResponse().getContentAsString();
+
+        assertEquals( responseJson, actualResponse );
     }
 }

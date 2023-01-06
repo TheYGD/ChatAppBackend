@@ -12,7 +12,10 @@ import pl.szmidla.chatappbackend.data.dto.UserRequest;
 import pl.szmidla.chatappbackend.exception.ItemNotFoundException;
 import pl.szmidla.chatappbackend.repository.UserRepository;
 
-import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,7 +37,7 @@ class UserServiceTest {
 
     @Test
     void registerUserSuccess() {
-        UserRequest user = createUser("username1", "email@em.pl", "passW0rd");
+        UserRequest user = createUserRequest("username1", "email@em.pl", "passW0rd");
         String expectedResponse = UserService.REGISTER_SUCCESS;
         when( userRepository.existsByEmail(anyString()) ).thenReturn( false );
         when( userRepository.existsByUsername(anyString()) ).thenReturn( false );
@@ -47,7 +50,7 @@ class UserServiceTest {
 
     @Test
     void registerUserEmailTaken() {
-        UserRequest user = createUser("username1", "email@em.pl", "passW0rd");
+        UserRequest user = createUserRequest("username1", "email@em.pl", "passW0rd");
         String expectedResponse = UserService.REGISTER_EMAIL_TAKEN;
         when( userRepository.existsByEmail(anyString()) ).thenReturn( true );
 
@@ -59,7 +62,7 @@ class UserServiceTest {
 
     @Test
     void registerUserUsernameTaken() {
-        UserRequest user = createUser("username1", "email@em.pl", "passW0rd");
+        UserRequest user = createUserRequest("username1", "email@em.pl", "passW0rd");
         String expectedResponse = UserService.REGISTER_USERNAME_TAKEN;
         when( userRepository.existsByEmail(anyString()) ).thenReturn( false );
         when( userRepository.existsByUsername(anyString()) ).thenReturn( true );
@@ -91,8 +94,17 @@ class UserServiceTest {
         assertThrows( IllegalArgumentException.class, () -> userService.getNUsersByPhrase(phrase, pageNr, pageSize) );
     }
 
-    private UserRequest createUser(String username, String email, String password) {
+    private UserRequest createUserRequest(String username, String email, String password) {
         UserRequest user = new UserRequest();
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPassword(password);
+        return user;
+    }
+
+    private User createUser(long id, String username, String email, String password) {
+        User user = new User();
+        user.setId(id);
         user.setUsername(username);
         user.setEmail(email);
         user.setPassword(password);
@@ -141,8 +153,7 @@ class UserServiceTest {
 
     @Test
     void getUserById() {
-        User user = createUser("user", "sth@email.com", "password").toUser();
-        user.setId(1L);
+        User user = createUser(1L, "user", "sth@email.com", "password");
         when( userRepository.findById(user.getId()) ).thenReturn( Optional.of(user) );
 
         User actualUser = userService.getUserById(user.getId());
@@ -152,16 +163,17 @@ class UserServiceTest {
 
     @Test
     void getUserByIdException() {
-        User user = createUser("user", "sth@email.com", "password").toUser();
-        user.setId(1L);
-        when( userRepository.findById(user.getId()) ).thenThrow( new ItemNotFoundException() );
+        User user = createUser(1L, "user", "sth@email.com", "password");
+        when( userRepository.findById(user.getId()) ).thenReturn( Optional.empty() );
 
-        assertThrows(ItemNotFoundException.class, () -> userService.getUserById(user.getId()));
+        Throwable exception = assertThrows(ItemNotFoundException.class, () -> userService.getUserById(user.getId()));
+
+        assertEquals( ItemNotFoundException.MESSAGE_TEMPLATE.formatted("Uqqser"), exception.getMessage() );
     }
 
     @Test
     void getUserByUsername() {
-        User user = createUser("user", "sth@email.com", "password").toUser();
+        User user = createUser(1L, "user", "sth@email.com", "password");
         when( userRepository.findByUsername(user.getUsername()) ).thenReturn( Optional.of(user) );
 
         User actualUser = userService.getUserByUsername(user.getUsername());
@@ -171,10 +183,57 @@ class UserServiceTest {
 
     @Test
     void getUserByUsernameException() {
-        User user = createUser("user", "sth@email.com", "password").toUser();
-        user.setId(1L);
-        when(userRepository.findByUsername(user.getUsername())).thenThrow(new ItemNotFoundException());
+        User user = createUser(1L, "user", "sth@email.com", "password");
+        when(userRepository.findByUsername(user.getUsername())).thenReturn( Optional.empty() );
 
-        assertThrows(ItemNotFoundException.class, () -> userService.getUserByUsername(user.getUsername()));
+        Throwable exception = assertThrows(ItemNotFoundException.class, () -> userService.getUserByUsername(user.getUsername()));
+
+        assertEquals( ItemNotFoundException.MESSAGE_TEMPLATE.formatted("User"), exception.getMessage() );
+    }
+
+    @Test
+    void setUsersActiveStatusToActive() {
+        User user = createUser(1L, "user", "sth@email.com", "password");
+        user.setLastActive(LocalDateTime.now());
+        when( userRepository.findByUsername( user.getUsername()) ).thenReturn( Optional.of(user) );
+
+        userService.setUsersActiveStatus(user.getUsername(), true);
+
+        assertNull(user.getLastActive());
+        verify( userRepository ).save( user );
+    }
+
+    @Test
+    void setUsersActiveStatusToInactive() {
+        User user = createUser(1L, "user", "sth@email.com", "password");
+        user.setLastActive(null);
+        long deltaSeconds = 30;
+        long epochSecondsNow = LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond();
+        when( userRepository.findByUsername( user.getUsername()) ).thenReturn( Optional.of(user) );
+
+        userService.setUsersActiveStatus(user.getUsername(), false);
+        long epochSecondsInMethod = user.getLastActive().atZone(ZoneId.systemDefault()).toEpochSecond();
+
+        assertEquals( epochSecondsNow, epochSecondsInMethod, deltaSeconds );
+        verify( userRepository ).save( user );
+    }
+
+    @Test
+    void getUsersActiveStatuses() {
+        List<User> userList = List.of(
+                createUser(1L, "user1", "sth@email.com", "password"),
+                createUser(2L, "user2", "sth@email2.com", "password")
+        );
+        userList.get(1).setLastActive(LocalDateTime.now());
+        when( userRepository.findById(1L) ).thenReturn( Optional.of(userList.get(0) ));
+        when( userRepository.findById(2L) ).thenReturn( Optional.of(userList.get(1) ));
+
+        Map<Long, String> responseMap = userService.getUsersActiveStatuses(userList
+                .stream().map(user -> user.getId()).toList());
+
+        for (User user : userList) {
+            String activeStatus = responseMap.get( user.getId() );
+            assertEquals( user.getLastActive() != null ? user.getLastActive().toString() : null, activeStatus );
+        }
     }
 }

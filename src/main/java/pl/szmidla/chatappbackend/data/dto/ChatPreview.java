@@ -20,19 +20,23 @@ public class ChatPreview {
     private String usersImageUrl;
     private Long firstMessageId;
     private String message; // last message
-    private String date; // date of last message or creation time    LocalDateTime.toString()
+    private String lastInteractionDate; // date of last message or creation time    LocalDateTime.toString()
+    private String lastActiveDate; // date of last activity / null if active now
 
     public static ChatPreview fromChat(Chat chat, User receiver) {
-        User toBeInChatUser = chat.getUser1().equals(receiver) ? chat.getUser2() : chat.getUser1();
+        User userToBeInChat = chat.getUser1().equals(receiver) ? chat.getUser2() : chat.getUser1();
         String messageContent = chat.getLastMessage();
+        String lastActiveDateString = userToBeInChat.getLastActive() != null ?
+                userToBeInChat.getLastActive().toString() : null;
         return new ChatPreview(
                 chat.getId(),
-                toBeInChatUser.getId(),
-                toBeInChatUser.getUsername(),
-                toBeInChatUser.getImageUrl(),
+                userToBeInChat.getId(),
+                userToBeInChat.getUsername(),
+                userToBeInChat.getImageUrl(),
                 chat.getFirstMessageId(),
                 messageContent,
-                chat.getLastDate().toString()
+                chat.getLastDate().toString(),
+                lastActiveDateString
         );
     }
 }
