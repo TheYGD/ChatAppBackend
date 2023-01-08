@@ -190,4 +190,14 @@ class ChatApiTest {
 
         assertEquals( expectedJson, responseJson );
     }
+
+    @Test
+    void messageRead() throws Exception {
+        long chatId = 1L;
+        long messageId = 1L;
+
+        mockMvc.perform( post("/api/chats/{id}/message-read", chatId)
+                        .param("messageId", String.valueOf(messageId) ) )
+                .andExpect( status().isOk() );
+    }
 }

@@ -52,4 +52,11 @@ public class ChatApi {
         chatService.sendMessage(user, chatId, content);
         return true;
     }
+
+    @PostMapping(value = "/{id}/message-read")
+    public void messageRead(@PathVariable("id") long chatId,
+                               @RequestParam long messageId) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        chatService.messageRead(user, chatId, messageId);
+    }
 }

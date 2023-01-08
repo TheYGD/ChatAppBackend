@@ -8,14 +8,17 @@ import org.springframework.stereotype.Repository;
 import pl.szmidla.chatappbackend.data.Message;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MessageRepository extends JpaRepository<Message, Long> {
 
+    Optional<Message> findById(long id);
+
     @Query("""
         SELECT m FROM Message m
         LEFT JOIN m.chat as c
-        WHERE c.id = :id AND 
+        WHERE c.id = :id AND
               m.id < :lastMessageId
         ORDER BY m.date DESC
     """)
