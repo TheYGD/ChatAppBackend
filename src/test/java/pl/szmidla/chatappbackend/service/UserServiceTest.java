@@ -168,7 +168,7 @@ class UserServiceTest {
 
         Throwable exception = assertThrows(ItemNotFoundException.class, () -> userService.getUserById(user.getId()));
 
-        assertEquals( ItemNotFoundException.MESSAGE_TEMPLATE.formatted("Uqqser"), exception.getMessage() );
+        assertEquals( ItemNotFoundException.MESSAGE_TEMPLATE.formatted("User"), exception.getMessage() );
     }
 
     @Test

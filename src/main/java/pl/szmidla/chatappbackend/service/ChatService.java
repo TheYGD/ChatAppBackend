@@ -12,7 +12,6 @@ import pl.szmidla.chatappbackend.data.dto.MessageResponse;
 import pl.szmidla.chatappbackend.exception.ItemAlreadyExistsException;
 import pl.szmidla.chatappbackend.exception.ItemNotFoundException;
 import pl.szmidla.chatappbackend.repository.ChatRepository;
-import pl.szmidla.chatappbackend.repository.MessageRepository;
 import pl.szmidla.chatappbackend.websocket.ChatWebSocketController;
 
 import javax.transaction.Transactional;
@@ -26,8 +25,8 @@ import java.util.List;
 public class ChatService {
 
     private UserService userService;
+    private MessageService messageService;
     private ChatRepository chatRepository;
-    private MessageRepository messageRepository;
     private ChatWebSocketController chatWebSocketController;
 
     public Chat getChatById(long id) {
@@ -95,6 +94,7 @@ public class ChatService {
     }
 
     /** @param lastMessageId use negative number to have it calculated */
+    @Transactional
     public List<MessageResponse> getNMessagesFromChat(User user, long chatId, long lastMessageId, int pageSize) {
         Chat chat = getChatByIdForUser(chatId, user);
         List<Message> lastNMessages;
@@ -102,12 +102,17 @@ public class ChatService {
 
         // we have to return most recent ones
         if (lastMessageId < 0) {
-            lastNMessages = messageRepository.findLastNMessagesFromChat(chat.getId(), pageable);
+            lastNMessages = messageService.getLastNMessagesFromChat(chat.getId(), pageable);
         }
         else {
-            lastNMessages = messageRepository.findLastNMessagesFromChatAfterId(chat.getId(), lastMessageId, pageable);
+            lastNMessages = messageService.getLastNMessagesFromChatAfterId(chat.getId(), lastMessageId, pageable);
         }
         Collections.reverse(lastNMessages);
+
+        if (lastNMessages.size() != 0) {
+            updateLastReadAndInformThroughWS(chat, user, lastNMessages.get(lastNMessages.size() - 1));
+        }
+        
         return lastNMessages.stream().map( message -> MessageResponse.fromMessage(message, user) ).toList();
     }
 
@@ -119,12 +124,13 @@ public class ChatService {
 
         Chat chat = getChatByIdForUser(chatId, sender);
         Message message = createMessage(chat, sender, content);
-        messageRepository.save(message);
+        messageService.saveMessage(message);
 
         if (chat.getFirstMessageId() == null) {
             chat.setFirstMessageId(message.getId());
         }
 
+        updateLastReadAndInformThroughWS(chat, sender, message);
         chat.setLastMessage(message.getContent());
         chat.setLastDate(message.getDate());
         chatRepository.save(chat);
@@ -132,6 +138,33 @@ public class ChatService {
         // WebSocket
         chatWebSocketController.sendMessage(message, chat.getUser1());
         chatWebSocketController.sendMessage(message, chat.getUser2());
+    }
+
+    private void updateLastReadAndInformThroughWS(Chat chat, User user, Message message) {
+        boolean updated = updateLastReadInChatForUser(chat, user, message);
+
+        if (updated) {
+            chatRepository.save(chat);
+            // WebSocket
+            chatWebSocketController.sendMessage(chat, chat.getUser1());
+            chatWebSocketController.sendMessage(chat, chat.getUser2());
+        }
+    }
+
+    private boolean updateLastReadInChatForUser(Chat chat, User user, Message message) {
+        if (chat.getUser1().equals(user)) {
+            if (chat.getLastReadByUser1() == null || chat.getLastReadByUser1().getId() < message.getId()) {
+                chat.setLastReadByUser1(message);
+                return true;
+            }
+        }
+        else {
+            if (chat.getLastReadByUser2() == null || chat.getLastReadByUser2().getId() < message.getId()) {
+                chat.setLastReadByUser2(message);
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isMessageContentValid(String content) {
@@ -144,5 +177,13 @@ public class ChatService {
                 .content(content)
                 .byUser1( chat.getUser1().equals(sender) )
                 .chat(chat).build();
+    }
+
+    @Transactional
+    public void messageRead(User user, long chatId, long messageId) {
+        Chat chat = getChatByIdForUser(chatId, user);
+        Message message =  messageService.getMessageByIdWithinChat(messageId, chat);
+
+        updateLastReadAndInformThroughWS(chat, user, message);
     }
 }

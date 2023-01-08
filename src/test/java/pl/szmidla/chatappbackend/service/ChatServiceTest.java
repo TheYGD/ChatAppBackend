@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pl.szmidla.chatappbackend.data.Chat;
 import pl.szmidla.chatappbackend.data.Message;
@@ -32,7 +33,7 @@ class ChatServiceTest {
     @Mock
     ChatRepository chatRepository;
     @Mock
-    MessageRepository messageRepository;
+    MessageService messageService;
     @Mock
     UserService userService;
     @Mock
@@ -185,7 +186,7 @@ class ChatServiceTest {
                 createMessageNow(2L, "mess2", false, chat),
                 createMessageNow(3L, "mess3", true, chat)));
         when( chatRepository.findById(chat.getId()) ).thenReturn(Optional.of(chat));
-        when( messageRepository.findLastNMessagesFromChat(any(), any()) ).thenReturn( messages );
+        when( messageService.getLastNMessagesFromChat(anyLong(), any()) ).thenReturn( messages );
 
         List<MessageResponse> messageResponses = chatService.getNMessagesFromChat(loggedUser, chat.getId(), -1,
                 10);
@@ -216,7 +217,7 @@ class ChatServiceTest {
                 createMessageNow(2L, "mess2", false, chat),
                 createMessageNow(3L, "mess3", true, chat)));
         when( chatRepository.findById(chat.getId()) ).thenReturn(Optional.of(chat));
-        when( messageRepository.findLastNMessagesFromChatAfterId(anyLong(), anyLong(), any()) ).thenReturn( messages );
+        when( messageService.getLastNMessagesFromChatAfterId(anyLong(), anyLong(), any()) ).thenReturn( messages );
 
         List<MessageResponse> messageResponses = chatService.getNMessagesFromChat(loggedUser, chat.getId(), 1,
                 10);
@@ -230,14 +231,14 @@ class ChatServiceTest {
     @Test
     void sendMessage() {
         User user1 = createUser(2L, "user1", "email1@o2.pl", "password");
-        Chat chat = createChatObj(1L, loggedUser, user1, null);
+        Chat chat = Mockito.spy(createChatObj(1L, loggedUser, user1, null));
         when( chatRepository.findById(chat.getId()) ).thenReturn( Optional.of(chat) );
 
         chatService.sendMessage(loggedUser, chat.getId(), "message");
 
-        verify( messageRepository ).save( any() );
-        verify( chatRepository ).save( any() );
-        verify( chatWebSocketController, times(2) ).sendMessage((Message) any(), any());
+        verify( chat ).setLastReadByUser1( any() );
+        verify( messageService ).saveMessage( any() );
+        verify( chatWebSocketController, times(2) ).sendMessage( (Message) any(), any() );
     }
 
     @Test
@@ -250,8 +251,40 @@ class ChatServiceTest {
         assertThrows( IllegalArgumentException.class, () ->
                 chatService.sendMessage(loggedUser, chat.getId(), "message"));
 
-        verify( messageRepository, times(0) ).save( any() );
+        verify( messageService, times(0) ).saveMessage( any() );
         verify( chatRepository , times(0)).save( any() );
         verify( chatWebSocketController, times(0) ).sendMessage((Message) any(), any());
+    }
+
+    @Test
+    void messageRead() {
+        User user2 = createUser(2L, "user2", "email2@o2.pl", "password");
+        Chat chat = createChatObj(1L, loggedUser, user2, null);
+        Message preLastMessage = createMessageNow(1L, "message", false, chat);
+        Message lastMessage = createMessageNow(2L, "message", false, chat);
+        chat.setLastReadByUser1(preLastMessage);
+        when( chatRepository.findById(chat.getId()) ).thenReturn( Optional.of(chat) );
+        when( messageService.getMessageByIdWithinChat( lastMessage.getId(), chat )).thenReturn( lastMessage );
+
+        chatService.messageRead(loggedUser, chat.getId(), lastMessage.getId());
+
+        assertEquals( lastMessage, chat.getLastReadByUser1() );
+        verify( chatRepository ).save( chat );
+    }
+
+    @Test
+    void messageReadNotLatest() {
+        User user2 = createUser(2L, "user2", "email2@o2.pl", "password");
+        Chat chat = createChatObj(1L, loggedUser, user2, null);
+        Message preLastMessage = createMessageNow(1L, "message", false, chat);
+        Message lastMessage = createMessageNow(2L, "message", false, chat);
+        chat.setLastReadByUser1(lastMessage);
+        when( chatRepository.findById(chat.getId()) ).thenReturn( Optional.of(chat) );
+        when( messageService.getMessageByIdWithinChat( preLastMessage.getId(), chat )).thenReturn( preLastMessage );
+
+        chatService.messageRead(loggedUser, chat.getId(), preLastMessage.getId());
+
+        assertEquals( lastMessage, chat.getLastReadByUser1() );
+        verify( chatRepository, times(0) ).save( chat );
     }
 }
