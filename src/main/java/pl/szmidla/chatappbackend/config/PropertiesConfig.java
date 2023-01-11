@@ -11,4 +11,7 @@ public class PropertiesConfig {
 
     @Value("${chat-app.security.jwt.expiration-hours}")
     public int JWT_EXPIRATION_HOURS;
+
+    @Value("${aws.frontend.origin}")
+    public String FRONTEND_ORIGIN;
 }

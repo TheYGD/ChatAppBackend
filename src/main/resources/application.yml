@@ -3,10 +3,6 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-  datasource:
-    url: jdbc:postgresql://localhost:5432/chatapp
-    username: postgres
-    password: admin
   sql:
     init:
       mode: always
@@ -14,7 +10,6 @@ spring:
   servlet:
     multipart:
       max-file-size: 10MB
-
 
 chat-app:
   security:
@@ -24,3 +19,19 @@ chat-app:
 
 aws:
   bucket: "jszmidla-chatapp"
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: jdbc:postgresql://localhost:5432/chatapp
+    username: postgres
+    password: admin
+
+aws:
+  bucket: "jszmidla-chatapp"
+  frontend:
+    origin: 'http://localhost:5173'

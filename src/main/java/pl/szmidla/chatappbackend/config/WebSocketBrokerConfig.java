@@ -19,13 +19,20 @@ import pl.szmidla.chatappbackend.security.UserDetailsServiceImpl;
 
 @Configuration
 @EnableWebSocketMessageBroker
-@AllArgsConstructor
 @Slf4j
 public class WebSocketBrokerConfig implements
         WebSocketMessageBrokerConfigurer {
 
     private JWTExtractor jwtExtractor;
     private UserDetailsServiceImpl userDetailsService;
+    private final String FRONTEND_ORIGIN;
+
+    public WebSocketBrokerConfig(JWTExtractor jwtExtractor, UserDetailsServiceImpl userDetailsService,
+                                 PropertiesConfig propertiesConfig) {
+        this.jwtExtractor = jwtExtractor;
+        this.userDetailsService = userDetailsService;
+        this.FRONTEND_ORIGIN = propertiesConfig.FRONTEND_ORIGIN;
+    }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
@@ -35,8 +42,7 @@ public class WebSocketBrokerConfig implements
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-//        registry.addEndpoint("/chat").setAllowedOrigins("*");
-        registry.addEndpoint("/ws/chats").setAllowedOrigins("http://localhost:5173")
+        registry.addEndpoint("/ws/chats").setAllowedOrigins(FRONTEND_ORIGIN)
                 .withSockJS();
     }
 
