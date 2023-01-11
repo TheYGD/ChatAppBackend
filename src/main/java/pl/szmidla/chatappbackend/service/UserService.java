@@ -15,6 +15,7 @@ import pl.szmidla.chatappbackend.repository.UserRepository;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +58,7 @@ public class UserService {
 
         userRequest.setPassword( passwordEncoder.encode(userRequest.getPassword()) );
         User user = userRequest.toUser();
-        user.setLastActive(LocalDateTime.now());
+        user.setLastActive(LocalDateTime.now(ZoneOffset.UTC));
         userRepository.save(user);
 
         return REGISTER_SUCCESS;
@@ -88,7 +89,7 @@ public class UserService {
             user.setLastActive(null);
         }
         else {
-            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
             user.setLastActive(now);
         }
 

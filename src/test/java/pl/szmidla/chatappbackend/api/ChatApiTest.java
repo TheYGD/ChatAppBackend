@@ -23,6 +23,7 @@ import pl.szmidla.chatappbackend.data.dto.MessageResponse;
 import pl.szmidla.chatappbackend.service.ChatService;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -86,7 +87,7 @@ class ChatApiTest {
         Message message = Message.builder()
                 .content(content)
                 .byUser1(byUser1)
-                .date(LocalDateTime.now()).build();
+                .date(LocalDateTime.now(ZoneOffset.UTC)).build();
         message.setId(id);
         return message;
     }
@@ -97,7 +98,7 @@ class ChatApiTest {
         chat.setUser1(thisUser);
         chat.setUser2(otherUser);
         chat.setLastMessage( lastMessage == null ? null : lastMessage.getContent());
-        chat.setLastDate( lastMessage == null ? LocalDateTime.now() : lastMessage.getDate());
+        chat.setLastDate( lastMessage == null ? LocalDateTime.now(ZoneOffset.UTC) : lastMessage.getDate());
         chat.setClosed(false);
 
         if (lastMessage != null) {

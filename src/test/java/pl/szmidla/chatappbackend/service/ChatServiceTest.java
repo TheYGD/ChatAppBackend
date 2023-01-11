@@ -18,6 +18,7 @@ import pl.szmidla.chatappbackend.repository.MessageRepository;
 import pl.szmidla.chatappbackend.websocket.ChatWebSocketController;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.util.LinkedList;
 import java.util.List;
@@ -68,7 +69,7 @@ class ChatServiceTest {
         chat.setUser1(thisUser);
         chat.setUser2(otherUser);
         chat.setLastMessage( lastMessage == null ? null : lastMessage.getContent());
-        chat.setLastDate( lastMessage == null ? LocalDateTime.now() : lastMessage.getDate());
+        chat.setLastDate( lastMessage == null ? LocalDateTime.now(ZoneOffset.UTC) : lastMessage.getDate());
         chat.setClosed(false);
 
         if (lastMessage != null) {
@@ -201,7 +202,7 @@ class ChatServiceTest {
         Message message = Message.builder()
                 .content(content)
                 .byUser1(byUser1)
-                .date(LocalDateTime.now())
+                .date(LocalDateTime.now(ZoneOffset.UTC))
                 .chat(chat).build();
         message.setId(id);
         chat.setLastMessage(message.getContent());

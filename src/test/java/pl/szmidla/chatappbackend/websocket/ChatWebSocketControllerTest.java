@@ -16,6 +16,7 @@ import pl.szmidla.chatappbackend.data.dto.MessageResponse;
 import pl.szmidla.chatappbackend.data.dto.MessageWS;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -67,7 +68,7 @@ class ChatWebSocketControllerTest {
         chat.setUser1(thisUser);
         chat.setUser2(otherUser);
         chat.setLastMessage( lastMessage == null ? null : lastMessage.getContent());
-        chat.setLastDate( lastMessage == null ? LocalDateTime.now() : lastMessage.getDate());
+        chat.setLastDate( lastMessage == null ? LocalDateTime.now(ZoneOffset.UTC) : lastMessage.getDate());
         chat.setClosed(false);
 
         if (lastMessage != null) {
@@ -80,7 +81,7 @@ class ChatWebSocketControllerTest {
         Message message = Message.builder()
                 .content(content)
                 .byUser1(byUser1)
-                .date(LocalDateTime.now())
+                .date(LocalDateTime.now(ZoneOffset.UTC))
                 .chat(chat).build();
         message.setId(id);
         chat.setLastMessage(message.getContent());
