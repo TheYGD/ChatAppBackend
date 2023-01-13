@@ -14,6 +14,7 @@ import pl.szmidla.chatappbackend.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -194,7 +195,7 @@ class UserServiceTest {
     @Test
     void setUsersActiveStatusToActive() {
         User user = createUser(1L, "user", "sth@email.com", "password");
-        user.setLastActive(LocalDateTime.now());
+        user.setLastActive(LocalDateTime.now(ZoneOffset.UTC));
         when( userRepository.findByUsername( user.getUsername()) ).thenReturn( Optional.of(user) );
 
         userService.setUsersActiveStatus(user.getUsername(), true);
@@ -208,7 +209,7 @@ class UserServiceTest {
         User user = createUser(1L, "user", "sth@email.com", "password");
         user.setLastActive(null);
         long deltaSeconds = 30;
-        long epochSecondsNow = LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond();
+        long epochSecondsNow = LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneId.systemDefault()).toEpochSecond();
         when( userRepository.findByUsername( user.getUsername()) ).thenReturn( Optional.of(user) );
 
         userService.setUsersActiveStatus(user.getUsername(), false);
@@ -224,7 +225,7 @@ class UserServiceTest {
                 createUser(1L, "user1", "sth@email.com", "password"),
                 createUser(2L, "user2", "sth@email2.com", "password")
         );
-        userList.get(1).setLastActive(LocalDateTime.now());
+        userList.get(1).setLastActive(LocalDateTime.now(ZoneOffset.UTC));
         when( userRepository.findById(1L) ).thenReturn( Optional.of(userList.get(0) ));
         when( userRepository.findById(2L) ).thenReturn( Optional.of(userList.get(1) ));
 

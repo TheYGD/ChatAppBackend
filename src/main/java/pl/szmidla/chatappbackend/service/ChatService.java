@@ -16,6 +16,7 @@ import pl.szmidla.chatappbackend.websocket.ChatWebSocketController;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 
@@ -82,7 +83,7 @@ public class ChatService {
                 .user2(otherUser)
                 .lastMessage(null)
                 .firstMessageId(null)
-                .lastDate(LocalDateTime.now())
+                .lastDate(LocalDateTime.now(ZoneOffset.UTC))
                 .closed(false).build();
         chatRepository.save(chat);
 
@@ -173,7 +174,7 @@ public class ChatService {
 
     private Message createMessage(Chat chat, User sender, String content) {
         return Message.builder()
-                .date(LocalDateTime.now())
+                .date(LocalDateTime.now(ZoneOffset.UTC))
                 .content(content)
                 .byUser1( chat.getUser1().equals(sender) )
                 .chat(chat).build();

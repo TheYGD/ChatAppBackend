@@ -15,6 +15,7 @@ import pl.szmidla.chatappbackend.exception.ItemNotFoundException;
 import pl.szmidla.chatappbackend.repository.MessageRepository;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
@@ -77,7 +78,7 @@ class MessageServiceTest {
         Message message = Message.builder()
                 .content(content)
                 .byUser1(byUser1)
-                .date(LocalDateTime.now())
+                .date(LocalDateTime.now(ZoneOffset.UTC))
                 .chat(chat).build();
         message.setId(id);
         chat.setLastMessage(message.getContent());
