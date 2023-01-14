@@ -18,6 +18,7 @@ public class NotActivatedUser extends BaseEntity {
     String email;
     String password;
     String activationToken;
+    LocalDateTime creationDate;
 
     public User toUser() {
         User user = User.builder()

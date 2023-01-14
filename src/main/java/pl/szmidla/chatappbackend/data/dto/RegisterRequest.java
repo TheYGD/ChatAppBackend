@@ -8,6 +8,8 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Getter
 @Setter
@@ -27,10 +29,12 @@ public class RegisterRequest {
     private String password;
 
     public NotActivatedUser toNotActivatedUser() {
-        NotActivatedUser user = new NotActivatedUser();
-        user.setUsername(username);
-        user.setEmail(email);
-        user.setPassword(password);
+        NotActivatedUser user = NotActivatedUser.builder()
+            .username(username)
+            .email(email)
+            .password(password)
+            .creationDate(LocalDateTime.now(ZoneOffset.UTC))
+            .build();
         return user;
     }
 }
