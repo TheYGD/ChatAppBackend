@@ -14,6 +14,7 @@ import pl.szmidla.chatappbackend.repository.NotActivatedUserRepository;
 import pl.szmidla.chatappbackend.repository.UserRepository;
 
 import javax.transaction.Transactional;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -57,17 +58,19 @@ public class RegisterService {
 
         registerRequest.setPassword( passwordEncoder.encode(registerRequest.getPassword()) );
         NotActivatedUser user = registerRequest.toNotActivatedUser();
-
         notActivatedUserRepository.save(user);
-        sendRegisterConfirmationEmail(user);
 
-        return REGISTER_SUCCESS;
+        user.setActivationToken(UUID.randomUUID().toString());
+        String idAndToken = user.getId().toString() + UserActivationToken.ID_TOKEN_DIVIDER_CHAR + user.getActivationToken();
+
+        sendRegisterConfirmationEmail(user.getEmail(), user.getUsername(), idAndToken);
+
+//        return REGISTER_SUCCESS;
+        return idAndToken;
     }
 
-    private void sendRegisterConfirmationEmail(NotActivatedUser user) {
-        String email = user.getEmail();
-        String username = user.getUsername();
-        String content = REGISTER_CONFIRMATION_EMAIL_TEMPLATE.formatted(username, user.getActivationToken());
+    private void sendRegisterConfirmationEmail(String email, String username, String idAndToken) {
+        String content = REGISTER_CONFIRMATION_EMAIL_TEMPLATE.formatted(username, idAndToken);
 
         emailService.sendEmail(REGISTER_CONFIRMATION_EMAIL_SUBJECT, email, content);
     }

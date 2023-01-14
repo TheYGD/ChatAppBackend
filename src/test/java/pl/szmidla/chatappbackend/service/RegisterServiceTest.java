@@ -56,6 +56,7 @@ class RegisterServiceTest {
     @Test
     void registerUserSuccess() {
         RegisterRequest user = createUserRequest("username1", "email@em.pl", "passW0rd");
+//        String expectedResponse = RegisterService.REGISTER_SUCCESS;
         String expectedResponse = RegisterService.REGISTER_SUCCESS;
         when( userRepository.existsByEmail(anyString()) ).thenReturn( false );
         when( userRepository.existsByUsername(anyString()) ).thenReturn( false );

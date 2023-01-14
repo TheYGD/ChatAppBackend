@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public class UserActivationToken {
-    static final char ID_TOKEN_DIVIDER_CHAR = '_';
+    public static final char ID_TOKEN_DIVIDER_CHAR = '_';
     private final long id;
     private final String token;
 
