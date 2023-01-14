@@ -10,8 +10,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import pl.szmidla.chatappbackend.data.User;
+import pl.szmidla.chatappbackend.exception.InvalidArgumentException;
 import pl.szmidla.chatappbackend.service.RegisterService;
-import pl.szmidla.chatappbackend.service.UserService;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -36,11 +36,11 @@ class RegisterApiTest {
     }
 
     @Test
-    void registerUser() throws Exception {
+    void registerRequest() throws Exception {
         String path = "/api/register";
         User user = createUser("username", "em@email.com", "password");
         String expectedResponseString = RegisterService.REGISTER_SUCCESS;
-        when( registerService.registerUser(any()) ).thenReturn( expectedResponseString );
+        when( registerService.handleRegisterRequest(any()) ).thenReturn( expectedResponseString );
 
         String actualResponseString = mockMvc.perform( post(path)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -54,7 +54,7 @@ class RegisterApiTest {
 
     /** username is invalid - too short */
     @Test
-    void registerUserInvalidBodyUsername() throws Exception {
+    void registerRequestInvalidBodyUsername() throws Exception {
         String path = "/api/register";
         User user = createUser("usern", "em@email.com", "password");
 
@@ -66,7 +66,7 @@ class RegisterApiTest {
 
     /** email is invalid */
     @Test
-    void registerUserInvalidBodyEmail() throws Exception {
+    void registerRequestInvalidBodyEmail() throws Exception {
         String path = "/api/register";
         User user = createUser("username", "ememail.com", "password");
 
@@ -78,7 +78,7 @@ class RegisterApiTest {
 
     /** password is invalid - too long */
     @Test
-    void registerUserInvalidBodyPassword() throws Exception {
+    void registerRequestInvalidBodyPassword() throws Exception {
         String path = "/api/register";
         User user = createUser("username", "ememail.com",
                 "passasdasdasdasdasdddasdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddrd");
@@ -156,5 +156,31 @@ class RegisterApiTest {
                 .andReturn();
 
         assertEquals( new ObjectMapper().writeValueAsString(expectedResponse), result.getResponse().getContentAsString() );
+    }
+
+    @Test
+    void confirmRegistrationSuccess() throws Exception {
+        String path = "/api/register/confirm";
+        String token = "12_hdia-sd76gb-asdasd";
+        String expectedResponse = RegisterService.ACCOUNT_ACTIVATED_RESPONSE;
+        when( registerService.activateUserAccount(token) ).thenReturn(expectedResponse);
+
+        MvcResult result = mockMvc.perform(post(path)
+                        .param("token", token))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertEquals( expectedResponse, result.getResponse().getContentAsString() );
+    }
+
+    @Test
+    void confirmRegistrationFail() throws Exception {
+        String path = "/api/register/confirm";
+        String token = "12_hdia-sd76gb-asdasd";
+        when( registerService.activateUserAccount(token) ).thenThrow( new InvalidArgumentException("Wrong token") );
+
+        mockMvc.perform(post(path)
+                        .param("token", token))
+                .andExpect(status().isBadRequest());
     }
 }

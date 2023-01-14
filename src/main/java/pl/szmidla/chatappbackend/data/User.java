@@ -3,8 +3,7 @@ package pl.szmidla.chatappbackend.data;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -14,6 +13,9 @@ import java.util.List;
 
 @Entity
 @Table(name="users")
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
 public class User extends BaseEntity implements UserDetails {

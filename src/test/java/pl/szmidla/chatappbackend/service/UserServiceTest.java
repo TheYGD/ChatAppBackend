@@ -5,10 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import pl.szmidla.chatappbackend.aws.AWSFileService;
 import pl.szmidla.chatappbackend.data.User;
-import pl.szmidla.chatappbackend.data.dto.UserRequest;
 import pl.szmidla.chatappbackend.exception.ItemNotFoundException;
 import pl.szmidla.chatappbackend.repository.UserRepository;
 

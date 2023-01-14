@@ -3,9 +3,8 @@ package pl.szmidla.chatappbackend.api;
 import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import pl.szmidla.chatappbackend.data.dto.UserRequest;
+import pl.szmidla.chatappbackend.data.dto.RegisterRequest;
 import pl.szmidla.chatappbackend.service.RegisterService;
-import pl.szmidla.chatappbackend.service.UserService;
 
 import javax.validation.Valid;
 
@@ -17,8 +16,8 @@ public class RegisterApi {
     private RegisterService registerService;
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public String registerUser(@RequestBody @Valid UserRequest user) {
-        return registerService.registerUser(user);
+    public String registerRequest(@RequestBody @Valid RegisterRequest user) {
+        return registerService.handleRegisterRequest(user);
     }
 
     @GetMapping(value = "/username-exists", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -31,4 +30,8 @@ public class RegisterApi {
         return registerService.emailExists(email);
     }
 
+    @PostMapping(value = "/confirm", produces = MediaType.APPLICATION_JSON_VALUE)
+    public String confirmRegistration(@RequestParam String token) {
+        return registerService.activateUserAccount(token);
+    }
 }

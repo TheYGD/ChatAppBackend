@@ -2,7 +2,7 @@ package pl.szmidla.chatappbackend.data.dto;
 
 import lombok.Getter;
 import lombok.Setter;
-import pl.szmidla.chatappbackend.data.User;
+import pl.szmidla.chatappbackend.data.NotActivatedUser;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
@@ -11,7 +11,7 @@ import javax.validation.constraints.Size;
 
 @Getter
 @Setter
-public class UserRequest {
+public class RegisterRequest {
     @NotNull
     @Size(min=6, max=30)
     @Pattern(regexp = "\\w+")
@@ -26,8 +26,8 @@ public class UserRequest {
     @Pattern(regexp = "\\w+")
     private String password;
 
-    public User toUser() {
-        User user = new User();
+    public NotActivatedUser toNotActivatedUser() {
+        NotActivatedUser user = new NotActivatedUser();
         user.setUsername(username);
         user.setEmail(email);
         user.setPassword(password);

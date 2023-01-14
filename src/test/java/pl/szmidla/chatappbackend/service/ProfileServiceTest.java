@@ -9,7 +9,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 import pl.szmidla.chatappbackend.aws.AWSFileService;
 import pl.szmidla.chatappbackend.data.User;
-import pl.szmidla.chatappbackend.data.dto.UserRequest;
 import pl.szmidla.chatappbackend.repository.UserRepository;
 
 import java.io.IOException;
@@ -30,17 +29,18 @@ class ProfileServiceTest {
     ProfileService profileService;
 
 
-    private UserRequest createUser(String username, String email, String password) {
-        UserRequest user = new UserRequest();
-        user.setUsername(username);
-        user.setEmail(email);
-        user.setPassword(password);
+    private User createUser(String username, String email, String password) {
+        User user = User.builder()
+                .username(username)
+                .email(email)
+                .password(password)
+                .build();
         return user;
     }
 
     @Test
     void uploadUserImageFirstImage() throws IOException {
-        User user = Mockito.spy(createUser("user", "sth@email.com", "password").toUser());
+        User user = Mockito.spy(createUser("user", "sth@email.com", "password"));
         MultipartFile file = Mockito.spy(new MockMultipartFile("my-file.png", "my-file.png",
                 MediaType.IMAGE_PNG_VALUE, new byte[]{1,2,3}));
 
@@ -53,7 +53,7 @@ class ProfileServiceTest {
 
     @Test
     void uploadUserImageWithRemovePrevious() throws IOException {
-        User user = Mockito.spy(createUser("user", "sth@email.com", "password").toUser());
+        User user = Mockito.spy(createUser("user", "sth@email.com", "password"));
         String expectedUrl = "some/url/prev.jpg";
         user.setImageUrl(expectedUrl);
         MultipartFile file = Mockito.spy(new MockMultipartFile("my-file.png", "my-file.png",
@@ -70,7 +70,7 @@ class ProfileServiceTest {
 
     @Test
     void uploadUserImageEmptyFile() {
-        User user = Mockito.spy(createUser("user", "sth@email.com", "password").toUser());
+        User user = Mockito.spy(createUser("user", "sth@email.com", "password"));
         user.setImageUrl("some/url");
         MultipartFile file = new MockMultipartFile("file", new byte[0]);
 
@@ -83,7 +83,7 @@ class ProfileServiceTest {
 
     @Test
     void uploadUserImageNotSupportedExtension() {
-        User user = Mockito.spy(createUser("user", "sth@email.com", "password").toUser());
+        User user = Mockito.spy(createUser("user", "sth@email.com", "password"));
         user.setImageUrl("some/url");
         MultipartFile file = Mockito.spy(new MockMultipartFile("file", new byte[]{1,2,3}));
         when( file.getContentType() ).thenReturn( "my/own");
@@ -97,7 +97,7 @@ class ProfileServiceTest {
 
     @Test
     void uploadUserImageNull() {
-        User user = Mockito.spy(createUser("user", "sth@email.com", "password").toUser());
+        User user = Mockito.spy(createUser("user", "sth@email.com", "password"));
         String expectedUrl = "some/url";
         user.setImageUrl(expectedUrl);
         MultipartFile file = null;

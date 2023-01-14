@@ -5,7 +5,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import pl.szmidla.chatappbackend.data.Chat;
 import pl.szmidla.chatappbackend.data.User;
-import pl.szmidla.chatappbackend.data.dto.UserRequest;
+import pl.szmidla.chatappbackend.data.dto.RegisterRequest;
 import pl.szmidla.chatappbackend.repository.UserRepository;
 import pl.szmidla.chatappbackend.service.ChatService;
 import pl.szmidla.chatappbackend.service.RegisterService;
@@ -37,8 +37,8 @@ public class BootstrapClass implements CommandLineRunner {
         for (int i = 0; i < 5; i++) {
             String username = randomString(8,15);
             String email = "email@das.email" + i;
-            UserRequest userReq1 = createUser(username, email, "Haslo123");
-            registerService.registerUser(userReq1);
+            RegisterRequest userReq1 = createUser(username, email, "Haslo123");
+            registerService.handleRegisterRequest(userReq1);
             User registered = userRepository.findByUsernameOrEmail(username, "").orElseThrow();
             createChat(user1, registered);
         }
@@ -69,19 +69,19 @@ public class BootstrapClass implements CommandLineRunner {
     }
 
     private void registerUsers() {
-        UserRequest userReq1 = createUser("login123", "email@email.com", "Haslo123");
-        registerService.registerUser(userReq1);
+        RegisterRequest userReq1 = createUser("login123", "email@email.com", "Haslo123");
+        registerService.handleRegisterRequest(userReq1);
         user1 = userRepository.findByUsernameOrEmail("login123", "").orElseThrow();
-        UserRequest userReq2 = createUser("login222", "email2@email.com", "Haslo123");
-        registerService.registerUser(userReq2);
+        RegisterRequest userReq2 = createUser("login222", "email2@email.com", "Haslo123");
+        registerService.handleRegisterRequest(userReq2);
         user2 = userRepository.findByUsernameOrEmail("login222", "").orElseThrow();
-        UserRequest userReq3 = createUser("thirdUser", "email3@email.com", "Haslo123");
-        registerService.registerUser(userReq3);
+        RegisterRequest userReq3 = createUser("thirdUser", "email3@email.com", "Haslo123");
+        registerService.handleRegisterRequest(userReq3);
         user3 = userRepository.findByUsernameOrEmail("thirdUser", "").orElseThrow();
     }
 
-    private UserRequest createUser(String username, String email, String password) {
-        UserRequest user = new UserRequest();
+    private RegisterRequest createUser(String username, String email, String password) {
+        RegisterRequest user = new RegisterRequest();
         user.setUsername(username);
         user.setEmail(email);
         user.setPassword(password);

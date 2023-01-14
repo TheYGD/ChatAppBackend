@@ -1,38 +1,102 @@
 package pl.szmidla.chatappbackend.service;
 
-import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import pl.szmidla.chatappbackend.config.PropertiesConfig;
+import pl.szmidla.chatappbackend.data.NotActivatedUser;
+import pl.szmidla.chatappbackend.data.dto.RegisterRequest;
 import pl.szmidla.chatappbackend.data.User;
-import pl.szmidla.chatappbackend.data.dto.UserRequest;
+import pl.szmidla.chatappbackend.data.other.UserActivationToken;
+import pl.szmidla.chatappbackend.exception.InvalidArgumentException;
+import pl.szmidla.chatappbackend.exception.ItemNotFoundException;
+import pl.szmidla.chatappbackend.repository.NotActivatedUserRepository;
 import pl.szmidla.chatappbackend.repository.UserRepository;
 
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import javax.transaction.Transactional;
 
 @Service
-@AllArgsConstructor
+@Slf4j
 public class RegisterService {
-    public static String REGISTER_SUCCESS = "Successfully registered.";
-    public static String REGISTER_EMAIL_TAKEN = "This email is already registered.";
-    public static String REGISTER_USERNAME_TAKEN = "This username is already taken.";
-    private UserRepository userRepository;
-    private PasswordEncoder passwordEncoder;
+    public static final String REGISTER_SUCCESS = "Successfully registered.";
+    public static final String REGISTER_EMAIL_TAKEN = "This email is already registered.";
+    public static final String REGISTER_USERNAME_TAKEN = "This username is already taken.";
+    public static final String ACCOUNT_ACTIVATED_RESPONSE = "Account is now active.";
+    public static final String REGISTER_CONFIRMATION_EMAIL_SUBJECT = "ChatApp - Confirm your registration";
+    /** formatted with username and activationToken */
+    public final String REGISTER_CONFIRMATION_EMAIL_TEMPLATE;
+    public static final String ACCOUNT_ACTIVATED_EMAIL_SUBJECT = "ChatApp - Account activated";
+    /** formatted with username */
+    public final String ACCOUNT_ACTIVATED_EMAIL_TEMPLATE;
+    private final EmailService emailService;
+    private final UserRepository userRepository;
+    private final NotActivatedUserRepository notActivatedUserRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public String registerUser(UserRequest userRequest) {
-        if (userRepository.existsByEmail(userRequest.getEmail())) {
+    public RegisterService(PropertiesConfig propertiesConfig, EmailService emailService, UserRepository userRepository,
+                           NotActivatedUserRepository notActivatedUserRepository,  PasswordEncoder passwordEncoder) {
+        this.REGISTER_CONFIRMATION_EMAIL_TEMPLATE = propertiesConfig.REGISTER_CONFIRMATION_EMAIL;
+        this.ACCOUNT_ACTIVATED_EMAIL_TEMPLATE = propertiesConfig.ACCOUNT_ACTIVATED_EMAIL;
+        this.emailService = emailService;
+        this.userRepository = userRepository;
+        this.notActivatedUserRepository = notActivatedUserRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+
+    public String handleRegisterRequest(RegisterRequest registerRequest) {
+        if (userRepository.existsByEmail(registerRequest.getEmail())) {
             throw new IllegalArgumentException(REGISTER_EMAIL_TAKEN);
         }
-        if (userRepository.existsByUsername(userRequest.getUsername())) {
+        if (userRepository.existsByUsername(registerRequest.getUsername())) {
             throw new IllegalArgumentException(REGISTER_USERNAME_TAKEN);
         }
 
-        userRequest.setPassword( passwordEncoder.encode(userRequest.getPassword()) );
-        User user = userRequest.toUser();
-        user.setLastActive(LocalDateTime.now(ZoneOffset.UTC));
-        userRepository.save(user);
+        registerRequest.setPassword( passwordEncoder.encode(registerRequest.getPassword()) );
+        NotActivatedUser user = registerRequest.toNotActivatedUser();
+
+        notActivatedUserRepository.save(user);
+        sendRegisterConfirmationEmail(user);
 
         return REGISTER_SUCCESS;
+    }
+
+    private void sendRegisterConfirmationEmail(NotActivatedUser user) {
+        String email = user.getEmail();
+        String username = user.getUsername();
+        String content = REGISTER_CONFIRMATION_EMAIL_TEMPLATE.formatted(username, user.getActivationToken());
+
+        emailService.sendEmail(REGISTER_CONFIRMATION_EMAIL_SUBJECT, email, content);
+    }
+
+    @Transactional
+    public String activateUserAccount(String idAndToken) {
+        UserActivationToken activationToken = UserActivationToken.create(idAndToken);
+        NotActivatedUser notActivatedUser = getNotActivatedUserById(activationToken.getId());
+
+        if (!notActivatedUser.getActivationToken().equals(activationToken.getToken())) {
+            throw new InvalidArgumentException("Wrong token");
+        }
+
+        User user = notActivatedUser.toUser();
+        notActivatedUserRepository.delete(notActivatedUser);
+        userRepository.save(user);
+
+        sendAccountActivatedEmail(user);
+        return ACCOUNT_ACTIVATED_RESPONSE;
+    }
+
+    private void sendAccountActivatedEmail(User user) {
+        String email = user.getEmail();
+        String username = user.getUsername();
+        String content = ACCOUNT_ACTIVATED_EMAIL_TEMPLATE.formatted(username);
+
+        emailService.sendEmail(ACCOUNT_ACTIVATED_EMAIL_SUBJECT, email, content);
+    }
+
+    private NotActivatedUser getNotActivatedUserById(long id) {
+        return notActivatedUserRepository.findById(id)
+                .orElseThrow( () -> new ItemNotFoundException("not activated user") );
     }
 
     public boolean usernameExists(String username) {
@@ -44,3 +108,4 @@ public class RegisterService {
     }
 
 }
+
