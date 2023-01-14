@@ -9,4 +9,8 @@ import java.util.Optional;
 @Repository
 public interface NotActivatedUserRepository extends JpaRepository<NotActivatedUser, Long> {
     Optional<NotActivatedUser> findById(long id);
+
+    boolean existsByEmail(String email);
+
+    boolean existsByUsername(String username);
 }

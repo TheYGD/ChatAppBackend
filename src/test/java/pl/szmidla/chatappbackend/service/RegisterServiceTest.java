@@ -59,6 +59,8 @@ class RegisterServiceTest {
         String expectedResponse = RegisterService.REGISTER_SUCCESS;
         when( userRepository.existsByEmail(anyString()) ).thenReturn( false );
         when( userRepository.existsByUsername(anyString()) ).thenReturn( false );
+        when( notActivatedUserRepository.existsByEmail(anyString()) ).thenReturn( false );
+        when( notActivatedUserRepository.existsByUsername(anyString()) ).thenReturn( false );
 
         String actualResponse = registerService.handleRegisterRequest(user);
 
@@ -72,7 +74,8 @@ class RegisterServiceTest {
     void registerUserEmailTaken() {
         RegisterRequest user = createUserRequest("username1", "email@em.pl", "passW0rd");
         String expectedResponse = RegisterService.REGISTER_EMAIL_TAKEN;
-        when( userRepository.existsByEmail(anyString()) ).thenReturn( true );
+        when( userRepository.existsByEmail(anyString()) ).thenReturn( false );
+        when( notActivatedUserRepository.existsByEmail(anyString()) ).thenReturn( true );
 
         Throwable response = assertThrows(IllegalArgumentException.class, () -> registerService.handleRegisterRequest(user));
 
@@ -100,6 +103,7 @@ class RegisterServiceTest {
     void usernameExistsNo() {
         String username = "user123";
         when( userRepository.existsByUsername(username) ).thenReturn( false );
+        when( notActivatedUserRepository.existsByUsername(username) ).thenReturn( false );
 
         boolean response = registerService.usernameExists(username);
 
@@ -109,7 +113,8 @@ class RegisterServiceTest {
     @Test
     void usernameExistsYes() {
         String username = "user123";
-        when( userRepository.existsByUsername(username) ).thenReturn( true );
+        when( userRepository.existsByUsername(username) ).thenReturn( false );
+        when( notActivatedUserRepository.existsByUsername(username) ).thenReturn( true );
 
         boolean response = registerService.usernameExists(username);
 
@@ -120,6 +125,7 @@ class RegisterServiceTest {
     void emailExistsNo() {
         String email = "email@email.com";
         when( userRepository.existsByEmail(email) ).thenReturn( false );
+        when( notActivatedUserRepository.existsByEmail(email) ).thenReturn( false );
 
         boolean response = registerService.emailExists(email);
 

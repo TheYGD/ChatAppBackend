@@ -44,11 +44,14 @@ public class RegisterService {
     }
 
 
+    @Transactional
     public String handleRegisterRequest(RegisterRequest registerRequest) {
-        if (userRepository.existsByEmail(registerRequest.getEmail())) {
+        if (userRepository.existsByEmail(registerRequest.getEmail()) ||
+                notActivatedUserRepository.existsByEmail(registerRequest.getEmail())) {
             throw new IllegalArgumentException(REGISTER_EMAIL_TAKEN);
         }
-        if (userRepository.existsByUsername(registerRequest.getUsername())) {
+        if (userRepository.existsByUsername(registerRequest.getUsername()) ||
+                notActivatedUserRepository.existsByUsername(registerRequest.getUsername())) {
             throw new IllegalArgumentException(REGISTER_USERNAME_TAKEN);
         }
 
@@ -100,11 +103,11 @@ public class RegisterService {
     }
 
     public boolean usernameExists(String username) {
-        return userRepository.existsByUsername(username);
+        return userRepository.existsByUsername(username) || notActivatedUserRepository.existsByUsername(username);
     }
 
     public boolean emailExists(String email) {
-        return userRepository.existsByEmail(email);
+        return userRepository.existsByEmail(email) || notActivatedUserRepository.existsByEmail(email);
     }
 
 }
