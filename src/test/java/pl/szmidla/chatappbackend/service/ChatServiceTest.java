@@ -14,7 +14,6 @@ import pl.szmidla.chatappbackend.data.dto.MessageResponse;
 import pl.szmidla.chatappbackend.exception.ItemAlreadyExistsException;
 import pl.szmidla.chatappbackend.exception.ItemNotFoundException;
 import pl.szmidla.chatappbackend.repository.ChatRepository;
-import pl.szmidla.chatappbackend.repository.MessageRepository;
 import pl.szmidla.chatappbackend.websocket.ChatWebSocketController;
 
 import java.time.LocalDateTime;

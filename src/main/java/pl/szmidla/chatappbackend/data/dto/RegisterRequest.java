@@ -2,16 +2,18 @@ package pl.szmidla.chatappbackend.data.dto;
 
 import lombok.Getter;
 import lombok.Setter;
-import pl.szmidla.chatappbackend.data.User;
+import pl.szmidla.chatappbackend.data.NotActivatedUser;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Getter
 @Setter
-public class UserRequest {
+public class RegisterRequest {
     @NotNull
     @Size(min=6, max=30)
     @Pattern(regexp = "\\w+")
@@ -26,11 +28,13 @@ public class UserRequest {
     @Pattern(regexp = "\\w+")
     private String password;
 
-    public User toUser() {
-        User user = new User();
-        user.setUsername(username);
-        user.setEmail(email);
-        user.setPassword(password);
+    public NotActivatedUser toNotActivatedUser() {
+        NotActivatedUser user = NotActivatedUser.builder()
+            .username(username)
+            .email(email)
+            .password(password)
+            .creationDate(LocalDateTime.now(ZoneOffset.UTC))
+            .build();
         return user;
     }
 }
