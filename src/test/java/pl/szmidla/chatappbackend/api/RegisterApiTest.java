@@ -10,6 +10,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import pl.szmidla.chatappbackend.data.User;
+import pl.szmidla.chatappbackend.service.RegisterService;
 import pl.szmidla.chatappbackend.service.UserService;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,14 +24,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class RegisterApiTest {
 
     @Mock
-    UserService userService;
+    RegisterService registerService;
     ObjectMapper objectMapper = new ObjectMapper();
     MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        RegisterApi registerApi = new RegisterApi(userService);
+        RegisterApi registerApi = new RegisterApi(registerService);
         mockMvc = MockMvcBuilders.standaloneSetup(registerApi).build();
     }
 
@@ -38,8 +39,8 @@ class RegisterApiTest {
     void registerUser() throws Exception {
         String path = "/api/register";
         User user = createUser("username", "em@email.com", "password");
-        String expectedResponseString = UserService.REGISTER_SUCCESS;
-        when( userService.registerUser(any()) ).thenReturn( expectedResponseString );
+        String expectedResponseString = RegisterService.REGISTER_SUCCESS;
+        when( registerService.registerUser(any()) ).thenReturn( expectedResponseString );
 
         String actualResponseString = mockMvc.perform( post(path)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -81,7 +82,7 @@ class RegisterApiTest {
         String path = "/api/register";
         User user = createUser("username", "ememail.com",
                 "passasdasdasdasdasdddasdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddrd");
-        String expectedResponseString = UserService.REGISTER_SUCCESS;
+        String expectedResponseString = RegisterService.REGISTER_SUCCESS;
 
         mockMvc.perform( post(path)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -102,7 +103,7 @@ class RegisterApiTest {
         String path = "/api/register/username-exists";
         String username = "username123";
         boolean expectedResponse = false;
-        when( userService.usernameExists(username) ).thenReturn( expectedResponse );
+        when( registerService.usernameExists(username) ).thenReturn( expectedResponse );
 
         MvcResult result = mockMvc.perform(get(path)
                         .param("username", username))
@@ -117,7 +118,7 @@ class RegisterApiTest {
         String path = "/api/register/username-exists";
         String username = "username123";
         boolean expectedResponse = false;
-        when(userService.usernameExists(username)).thenReturn( expectedResponse );
+        when( registerService.usernameExists(username) ).thenReturn( expectedResponse );
 
         MvcResult result = mockMvc.perform(get(path)
                         .param("username", username))
@@ -132,7 +133,7 @@ class RegisterApiTest {
         String path = "/api/register/email-exists";
         String email = "email@email.com";
         boolean expectedResponse = true;
-        when( userService.emailExists(email) ).thenReturn( expectedResponse );
+        when( registerService.emailExists(email) ).thenReturn( expectedResponse );
 
         MvcResult result = mockMvc.perform(get(path)
                         .param("email", email))
@@ -147,7 +148,7 @@ class RegisterApiTest {
         String path = "/api/register/email-exists";
         String email = "email@email.com";
         boolean expectedResponse = false;
-        when( userService.emailExists(email) ).thenReturn(expectedResponse);
+        when( registerService.emailExists(email) ).thenReturn(expectedResponse);
 
         MvcResult result = mockMvc.perform(get(path)
                         .param("email", email))

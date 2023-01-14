@@ -8,13 +8,13 @@ import pl.szmidla.chatappbackend.data.User;
 import pl.szmidla.chatappbackend.data.dto.UserRequest;
 import pl.szmidla.chatappbackend.repository.UserRepository;
 import pl.szmidla.chatappbackend.service.ChatService;
-import pl.szmidla.chatappbackend.service.UserService;
+import pl.szmidla.chatappbackend.service.RegisterService;
 
 @Component
 @RequiredArgsConstructor
 public class BootstrapClass implements CommandLineRunner {
 
-    private final UserService userService;
+    private final RegisterService registerService;
     private final UserRepository userRepository;
     private final ChatService chatService;
     private User user1;
@@ -38,7 +38,7 @@ public class BootstrapClass implements CommandLineRunner {
             String username = randomString(8,15);
             String email = "email@das.email" + i;
             UserRequest userReq1 = createUser(username, email, "Haslo123");
-            userService.registerUser(userReq1);
+            registerService.registerUser(userReq1);
             User registered = userRepository.findByUsernameOrEmail(username, "").orElseThrow();
             createChat(user1, registered);
         }
@@ -70,13 +70,13 @@ public class BootstrapClass implements CommandLineRunner {
 
     private void registerUsers() {
         UserRequest userReq1 = createUser("login123", "email@email.com", "Haslo123");
-        userService.registerUser(userReq1);
+        registerService.registerUser(userReq1);
         user1 = userRepository.findByUsernameOrEmail("login123", "").orElseThrow();
         UserRequest userReq2 = createUser("login222", "email2@email.com", "Haslo123");
-        userService.registerUser(userReq2);
+        registerService.registerUser(userReq2);
         user2 = userRepository.findByUsernameOrEmail("login222", "").orElseThrow();
         UserRequest userReq3 = createUser("thirdUser", "email3@email.com", "Haslo123");
-        userService.registerUser(userReq3);
+        registerService.registerUser(userReq3);
         user3 = userRepository.findByUsernameOrEmail("thirdUser", "").orElseThrow();
     }
 

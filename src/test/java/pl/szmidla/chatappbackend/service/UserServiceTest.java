@@ -29,50 +29,8 @@ class UserServiceTest {
 
     @Mock
     UserRepository userRepository;
-    @Spy
-    PasswordEncoder passwordEncoder;
-    @Mock
-    AWSFileService fileService;
     @InjectMocks
     UserService userService;
-
-    @Test
-    void registerUserSuccess() {
-        UserRequest user = createUserRequest("username1", "email@em.pl", "passW0rd");
-        String expectedResponse = UserService.REGISTER_SUCCESS;
-        when( userRepository.existsByEmail(anyString()) ).thenReturn( false );
-        when( userRepository.existsByUsername(anyString()) ).thenReturn( false );
-
-        String actualResponse = userService.registerUser(user);
-
-        assertEquals(expectedResponse, actualResponse);
-        verify( passwordEncoder ).encode(any());
-    }
-
-    @Test
-    void registerUserEmailTaken() {
-        UserRequest user = createUserRequest("username1", "email@em.pl", "passW0rd");
-        String expectedResponse = UserService.REGISTER_EMAIL_TAKEN;
-        when( userRepository.existsByEmail(anyString()) ).thenReturn( true );
-
-        Throwable response = assertThrows(IllegalArgumentException.class, () -> userService.registerUser(user));
-
-        assertEquals( expectedResponse, response.getMessage() );
-        verify( passwordEncoder, times(0) ).encode(any());
-    }
-
-    @Test
-    void registerUserUsernameTaken() {
-        UserRequest user = createUserRequest("username1", "email@em.pl", "passW0rd");
-        String expectedResponse = UserService.REGISTER_USERNAME_TAKEN;
-        when( userRepository.existsByEmail(anyString()) ).thenReturn( false );
-        when( userRepository.existsByUsername(anyString()) ).thenReturn( true );
-
-        Throwable response = assertThrows(IllegalArgumentException.class, () -> userService.registerUser(user));
-
-        assertEquals( expectedResponse, response.getMessage() );
-        verify( passwordEncoder, times(0) ).encode(any());
-    }
 
     @Test
     void getNUsersByPhraseSuccess() {
@@ -95,13 +53,6 @@ class UserServiceTest {
         assertThrows( IllegalArgumentException.class, () -> userService.getNUsersByPhrase(phrase, pageNr, pageSize) );
     }
 
-    private UserRequest createUserRequest(String username, String email, String password) {
-        UserRequest user = new UserRequest();
-        user.setUsername(username);
-        user.setEmail(email);
-        user.setPassword(password);
-        return user;
-    }
 
     private User createUser(long id, String username, String email, String password) {
         User user = new User();
@@ -110,46 +61,6 @@ class UserServiceTest {
         user.setEmail(email);
         user.setPassword(password);
         return user;
-    }
-
-    @Test
-    void usernameExistsNo() {
-        String username = "user123";
-        when( userRepository.existsByUsername(username) ).thenReturn( false );
-
-        boolean response = userService.usernameExists(username);
-
-        assertFalse(response);
-    }
-
-    @Test
-    void usernameExistsYes() {
-        String username = "user123";
-        when( userRepository.existsByUsername(username) ).thenReturn( true );
-
-        boolean response = userService.usernameExists(username);
-
-        assertTrue(response);
-    }
-
-    @Test
-    void emailExistsNo() {
-        String email = "email@email.com";
-        when( userRepository.existsByEmail(email) ).thenReturn( false );
-
-        boolean response = userService.emailExists(email);
-
-        assertFalse(response);
-    }
-
-    @Test
-    void emailExistsYes() {
-        String email = "email@email.com";
-        when( userRepository.existsByEmail(email) ).thenReturn( true );
-
-        boolean response = userService.emailExists(email);
-
-        assertTrue(response);
     }
 
     @Test
