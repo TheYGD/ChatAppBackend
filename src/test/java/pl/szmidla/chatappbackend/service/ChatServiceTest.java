@@ -2,10 +2,12 @@ package pl.szmidla.chatappbackend.service;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.multipart.MultipartFile;
 import pl.szmidla.chatappbackend.data.Chat;
 import pl.szmidla.chatappbackend.data.Message;
 import pl.szmidla.chatappbackend.data.User;
@@ -16,6 +18,7 @@ import pl.szmidla.chatappbackend.exception.ItemNotFoundException;
 import pl.szmidla.chatappbackend.repository.ChatRepository;
 import pl.szmidla.chatappbackend.websocket.ChatWebSocketController;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
@@ -36,6 +39,8 @@ class ChatServiceTest {
     MessageService messageService;
     @Mock
     UserService userService;
+    @Mock
+    FileService fileService;
     @Mock
     ChatWebSocketController chatWebSocketController;
     @InjectMocks
@@ -67,7 +72,7 @@ class ChatServiceTest {
         chat.setId(id);
         chat.setUser1(thisUser);
         chat.setUser2(otherUser);
-        chat.setLastMessage( lastMessage == null ? null : lastMessage.getContent());
+        chat.setLastMessage(lastMessage);
         chat.setLastDate( lastMessage == null ? LocalDateTime.now(ZoneOffset.UTC) : lastMessage.getDate());
         chat.setClosed(false);
 
@@ -204,7 +209,7 @@ class ChatServiceTest {
                 .date(LocalDateTime.now(ZoneOffset.UTC))
                 .chat(chat).build();
         message.setId(id);
-        chat.setLastMessage(message.getContent());
+        chat.setLastMessage(message);
         chat.setLastDate(message.getDate());
         return message;
     }
@@ -234,7 +239,7 @@ class ChatServiceTest {
         Chat chat = Mockito.spy(createChatObj(1L, loggedUser, user1, null));
         when( chatRepository.findById(chat.getId()) ).thenReturn( Optional.of(chat) );
 
-        chatService.sendMessage(loggedUser, chat.getId(), "message");
+        chatService.sendTextMessage(loggedUser, chat.getId(), "message");
 
         verify( chat ).setLastReadByUser1( any() );
         verify( messageService ).saveMessage( any() );
@@ -249,7 +254,7 @@ class ChatServiceTest {
         when( chatRepository.findById(chat.getId()) ).thenReturn( Optional.of(chat) );
 
         assertThrows( IllegalArgumentException.class, () ->
-                chatService.sendMessage(loggedUser, chat.getId(), "message"));
+                chatService.sendTextMessage(loggedUser, chat.getId(), "message"));
 
         verify( messageService, times(0) ).saveMessage( any() );
         verify( chatRepository , times(0)).save( any() );
@@ -286,5 +291,29 @@ class ChatServiceTest {
 
         assertEquals( lastMessage, chat.getLastReadByUser1() );
         verify( chatRepository, times(0) ).save( chat );
+    }
+
+    @Test
+    void sendFiles() throws IOException {
+        MultipartFile file = Mockito.mock(MultipartFile.class);
+        List<MultipartFile> files = List.of(file, file);
+        User otherUser = createUser(2L, "username2", "em@ai.l2", "password");
+        Chat chat = createChatObj(1L, loggedUser, otherUser, null);
+        when( chatRepository.findById(chat.getId()) ).thenReturn( Optional.of(chat) );
+        when( file.getOriginalFilename() ).thenReturn( "some_name.extension" );
+        ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
+
+        // assigning the id as the saving in db would
+        doAnswer(invocationOnMock -> {
+            Message message = invocationOnMock.getArgument(0);
+            message.setId(1L);
+            return null;
+        }).when(messageService).saveMessage(any());
+
+        chatService.sendFiles(loggedUser, chat.getId(), files);
+
+        verify( fileService, times(files.size()) ).save( anyString(), any(), any() );
+        verify( messageService, times(files.size()) ).saveMessage( any() );
+        verify( chatWebSocketController, times(files.size() * 2) ).sendMessage((Message) any(), any() );
     }
 }

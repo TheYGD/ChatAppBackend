@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import pl.szmidla.chatappbackend.data.Chat;
 import pl.szmidla.chatappbackend.data.Message;
 import pl.szmidla.chatappbackend.data.User;
@@ -12,21 +13,24 @@ import pl.szmidla.chatappbackend.data.dto.MessageResponse;
 import pl.szmidla.chatappbackend.exception.ItemAlreadyExistsException;
 import pl.szmidla.chatappbackend.exception.ItemNotFoundException;
 import pl.szmidla.chatappbackend.repository.ChatRepository;
+import pl.szmidla.chatappbackend.repository.MessageRepository;
 import pl.szmidla.chatappbackend.websocket.ChatWebSocketController;
 
 import javax.transaction.Transactional;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Service
 @Slf4j
 @AllArgsConstructor
 public class ChatService {
+    private final MessageRepository messageRepository;
 
     private UserService userService;
     private MessageService messageService;
+    private FileService fileService;
     private ChatRepository chatRepository;
     private ChatWebSocketController chatWebSocketController;
 
@@ -118,21 +122,25 @@ public class ChatService {
     }
 
     @Transactional
-    public void sendMessage(User sender, long chatId, String content) {
+    public void sendTextMessage(User sender, long chatId, String content) {
         if (!isMessageContentValid(content)) {
             return;
         }
 
         Chat chat = getChatByIdForUser(chatId, sender);
-        Message message = createMessage(chat, sender, content);
+        Message message = createTextMessage(chat, sender, content);
         messageService.saveMessage(message);
 
         if (chat.getFirstMessageId() == null) {
             chat.setFirstMessageId(message.getId());
         }
 
+        notifyAboutMessage(chat, sender, message);
+    }
+
+    private void notifyAboutMessage(Chat chat, User sender, Message message) {
         updateLastReadAndInformThroughWS(chat, sender, message);
-        chat.setLastMessage(message.getContent());
+        chat.setLastMessage(message);
         chat.setLastDate(message.getDate());
         chatRepository.save(chat);
 
@@ -172,12 +180,18 @@ public class ChatService {
         return content.length() > 0 && content.length() < 10000;
     }
 
-    private Message createMessage(Chat chat, User sender, String content) {
+    private Message createTextMessage(Chat chat, User sender, String content) {
+        return createMessage(chat, sender, true, content);
+    }
+
+    private Message createMessage(Chat chat, User sender, boolean isText, String conent) {
         return Message.builder()
                 .date(LocalDateTime.now(ZoneOffset.UTC))
-                .content(content)
+                .content(conent)
                 .byUser1( chat.getUser1().equals(sender) )
-                .chat(chat).build();
+                .isText(isText)
+                .chat(chat)
+                .build();
     }
 
     @Transactional
@@ -186,5 +200,47 @@ public class ChatService {
         Message message =  messageService.getMessageByIdWithinChat(messageId, chat);
 
         updateLastReadAndInformThroughWS(chat, user, message);
+    }
+
+    @Transactional
+    public void sendFiles(User sender, long chatId, List<MultipartFile> files) {
+        Chat chat = getChatByIdForUser(chatId, sender);
+
+        Message firstMessage = null;
+        for (int i = 0; i < files.size(); i++) {
+            MultipartFile file = files.get(i);
+            Message message = uploadFileMessage(sender, file, chat);
+            notifyAboutMessage(chat, sender, message);
+            if (i == 0) {
+                firstMessage = message;
+            }
+        }
+
+        if (chat.getFirstMessageId() == null) {
+            chat.setFirstMessageId(firstMessage.getId());
+        }
+    }
+
+    private Message uploadFileMessage(User sender, MultipartFile file, Chat chat) {
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("Content-Type", file.getContentType());
+        metadata.put("Content-Length", String.valueOf(file.getSize()));
+
+        String extension = file.getOriginalFilename().substring( file.getOriginalFilename().lastIndexOf('.') );
+        String fileName = "file-" + UUID.randomUUID() + extension;
+        String pathFileName = "images/" + fileName;
+        try {
+            fileService.save(pathFileName, metadata, file.getInputStream());
+        } catch (IOException e) {
+            log.error("io file exception while uploading file message");
+            throw new RuntimeException(e);
+        }
+        Message message = createFileMessage(chat, sender, fileName);
+        messageService.saveMessage(message);
+        return message;
+    }
+
+    private Message createFileMessage(Chat chat, User sender, String imageUrl) {
+        return createMessage(chat, sender, false, imageUrl);
     }
 }

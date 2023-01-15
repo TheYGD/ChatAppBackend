@@ -16,6 +16,7 @@ public class MessageResponse {
     private String content;
     private String date;
     private boolean sent;
+    private boolean isText;
 
     public static MessageResponse fromMessage(Message message, User user) {
         boolean sentByUser = message.isByUser1() && message.getChat().getUser1().equals(user) ||
@@ -26,6 +27,7 @@ public class MessageResponse {
                 .content(message.getContent())
                 .date(shortDateString)
                 .sent( sentByUser )
+                .isText(message.isText())
                 .build();
     }
 }

@@ -57,11 +57,11 @@ public class BootstrapClass implements CommandLineRunner {
     private void sendSomeMessages(Chat chat) {
         User user1 = chat.getUser1();
         User user2 = chat.getUser2();
-        chatService.sendMessage(user1, chat.getId(), "Henlo");
-        chatService.sendMessage(user2, chat.getId(), "Hello, what's up?");
-        chatService.sendMessage(user1, chat.getId(), "s'all good man, u?");
-        chatService.sendMessage(user1, chat.getId(), "asdasd");
-        chatService.sendMessage(user1, chat.getId(), "something");
+        chatService.sendTextMessage(user1, chat.getId(), "Henlo");
+        chatService.sendTextMessage(user2, chat.getId(), "Hello, what's up?");
+        chatService.sendTextMessage(user1, chat.getId(), "s'all good man, u?");
+        chatService.sendTextMessage(user1, chat.getId(), "asdasd");
+        chatService.sendTextMessage(user1, chat.getId(), "something");
     }
 
     private Chat createChat(User user1, User user2) {
