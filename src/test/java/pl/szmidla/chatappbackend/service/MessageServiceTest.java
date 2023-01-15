@@ -80,7 +80,7 @@ class MessageServiceTest {
                 .date(LocalDateTime.now(ZoneOffset.UTC))
                 .chat(chat).build();
         message.setId(id);
-        chat.setLastMessage(message.getContent());
+        chat.setLastMessage(message);
         chat.setLastDate(message.getDate());
         return message;
     }

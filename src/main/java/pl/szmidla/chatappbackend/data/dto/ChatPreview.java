@@ -20,6 +20,7 @@ public class ChatPreview {
     private String usersImageUrl;
     private Long firstMessageId;
     private String message; // last message
+    private boolean isText;
     private long lastReadMessageIdByThis;
     private long lastReadMessageIdByOther;
     private String lastInteractionDate; // date of last message or creation time    LocalDateTime.toString()
@@ -27,9 +28,10 @@ public class ChatPreview {
 
     public static ChatPreview fromChat(Chat chat, User logged) {
         User userToBeInChat = chat.getUser1().equals(logged) ? chat.getUser2() : chat.getUser1();
-        String messageContent = chat.getLastMessage();
+        String messageContent = chat.getLastMessage() != null ? chat.getLastMessage().getContent() : null;
         String lastActiveDateString = userToBeInChat.getLastActive() != null ?
                 userToBeInChat.getLastActive().toString() : null;
+        boolean isText = chat.getLastMessage() == null || chat.getLastMessage().isText();
         long lastReadMessageIdByThis;
         long lastReadMessageIdByOther;
         if (logged.equals(chat.getUser1())) {
@@ -48,6 +50,7 @@ public class ChatPreview {
                 userToBeInChat.getImageUrl(),
                 chat.getFirstMessageId(),
                 messageContent,
+                isText,
                 lastReadMessageIdByThis,
                 lastReadMessageIdByOther,
                 chat.getLastDate().toString(),

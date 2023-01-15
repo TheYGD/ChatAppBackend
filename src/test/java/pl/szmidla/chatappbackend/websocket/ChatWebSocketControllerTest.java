@@ -63,7 +63,7 @@ class ChatWebSocketControllerTest {
         chat.setId(id);
         chat.setUser1(thisUser);
         chat.setUser2(otherUser);
-        chat.setLastMessage( lastMessage == null ? null : lastMessage.getContent());
+        chat.setLastMessage(lastMessage);
         chat.setLastDate( lastMessage == null ? LocalDateTime.now(ZoneOffset.UTC) : lastMessage.getDate());
         chat.setClosed(false);
 
@@ -80,7 +80,7 @@ class ChatWebSocketControllerTest {
                 .date(LocalDateTime.now(ZoneOffset.UTC))
                 .chat(chat).build();
         message.setId(id);
-        chat.setLastMessage(message.getContent());
+        chat.setLastMessage(message);
         chat.setLastDate(message.getDate());
         return message;
     }

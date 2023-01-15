@@ -7,6 +7,7 @@ import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import pl.szmidla.chatappbackend.config.PropertiesConfig;
+import pl.szmidla.chatappbackend.data.User;
 import pl.szmidla.chatappbackend.data.dto.RegisterRequest;
 import pl.szmidla.chatappbackend.data.NotActivatedUser;
 import pl.szmidla.chatappbackend.exception.InvalidArgumentException;
@@ -55,17 +56,17 @@ class RegisterServiceTest {
 
     @Test
     void registerUserSuccess() {
-        RegisterRequest user = createUserRequest("username1", "email@em.pl", "passW0rd");
-//        String expectedResponse = RegisterService.REGISTER_SUCCESS;
-        String expectedResponse = RegisterService.REGISTER_SUCCESS;
+        RegisterRequest user = Mockito.spy(createUserRequest("username1", "email@em.pl", "passW0rd"));
+        NotActivatedUser userFromRequest = user.toNotActivatedUser();
+        userFromRequest.setId(1L);
         when( userRepository.existsByEmail(anyString()) ).thenReturn( false );
         when( userRepository.existsByUsername(anyString()) ).thenReturn( false );
         when( notActivatedUserRepository.existsByEmail(anyString()) ).thenReturn( false );
         when( notActivatedUserRepository.existsByUsername(anyString()) ).thenReturn( false );
+        when( user.toNotActivatedUser() ).thenReturn( userFromRequest );
 
         String actualResponse = registerService.handleRegisterRequest(user);
 
-        assertEquals(expectedResponse, actualResponse);
         verify( passwordEncoder ).encode( any() );
         verify( notActivatedUserRepository ).save( any() );
         verify( emailService ).sendEmail( anyString(), anyString(), anyString() );

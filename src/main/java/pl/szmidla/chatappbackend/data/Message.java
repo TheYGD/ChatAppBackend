@@ -19,6 +19,7 @@ public class Message extends BaseEntity {
     private LocalDateTime date;
     private String content;
     private boolean byUser1;
+    private boolean isText;
 
     @ManyToOne
     @JoinColumn(name="chat_id")

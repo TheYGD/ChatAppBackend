@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import pl.szmidla.chatappbackend.data.Chat;
 import pl.szmidla.chatappbackend.data.User;
 import pl.szmidla.chatappbackend.data.dto.ChatPreview;
@@ -45,12 +46,19 @@ public class ChatApi {
         return messages;
     }
 
-    @PostMapping(value = "/{id}/messages", produces = MediaType.APPLICATION_JSON_VALUE)
-    public boolean sendMessage(@PathVariable("id") long chatId,
+    @PostMapping(value = "/{id}/messages")
+    public void sendMessage(@PathVariable("id") long chatId,
                                @RequestParam String content) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        chatService.sendMessage(user, chatId, content);
-        return true;
+        chatService.sendTextMessage(user, chatId, content);
+    }
+
+    @PostMapping(value = "/{id}/files", produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public void sendFiles(@PathVariable("id") long chatId,
+                               @RequestParam("file") List<MultipartFile> files) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        chatService.sendFiles(user, chatId, files);
     }
 
     @PostMapping(value = "/{id}/message-read")

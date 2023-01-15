@@ -65,7 +65,6 @@ public class RegisterService {
 
         sendRegisterConfirmationEmail(user.getEmail(), user.getUsername(), idAndToken);
 
-//        return REGISTER_SUCCESS;
         return idAndToken;
     }
 

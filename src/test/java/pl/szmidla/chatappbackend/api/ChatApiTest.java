@@ -1,5 +1,6 @@
 package pl.szmidla.chatappbackend.api;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,11 +9,13 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.multipart.MultipartFile;
 import pl.szmidla.chatappbackend.data.Chat;
 import pl.szmidla.chatappbackend.data.Message;
 import pl.szmidla.chatappbackend.data.User;
@@ -26,8 +29,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -95,7 +97,7 @@ class ChatApiTest {
         chat.setId(id);
         chat.setUser1(thisUser);
         chat.setUser2(otherUser);
-        chat.setLastMessage( lastMessage == null ? null : lastMessage.getContent());
+        chat.setLastMessage( lastMessage );
         chat.setLastDate( lastMessage == null ? LocalDateTime.now(ZoneOffset.UTC) : lastMessage.getDate());
         chat.setClosed(false);
 
@@ -179,15 +181,10 @@ class ChatApiTest {
         User user2 = createUser(2L, "us2", "em2", "pass");
         Chat chat = createChatObj(1L, loggedUser, user2, null);
         String content = "message :)";
-        String expectedJson  = "true";
 
-        String responseJson = mockMvc.perform( post("/api/chats/{id}/messages", chat.getId())
+        mockMvc.perform( post("/api/chats/{id}/messages", chat.getId())
                         .param("content", content))
-                .andExpect( status().isOk() )
-                .andExpect( content().contentType(MediaType.APPLICATION_JSON) )
-                .andReturn().getResponse().getContentAsString();
-
-        assertEquals( expectedJson, responseJson );
+                .andExpect( status().isOk() );
     }
 
     @Test
@@ -198,5 +195,26 @@ class ChatApiTest {
         mockMvc.perform( post("/api/chats/{id}/message-read", chatId)
                         .param("messageId", String.valueOf(messageId) ) )
                 .andExpect( status().isOk() );
+    }
+
+    @Test
+    void sendFilesSuccess() throws Exception {
+        User user2 = createUser(2L, "us2", "em2", "pass");
+        Chat chat = createChatObj(1L, loggedUser, user2, null);
+        MockMultipartFile file = new MockMultipartFile( "file", new byte[]{});
+
+        mockMvc.perform( multipart("/api/chats/{id}/files", chat.getId())
+                        .file(file)
+                        .file(file)
+                        .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
+                .andExpect( status().isOk() );
+    }
+    @Test
+    void sendFilesFail() throws Exception {
+        User user2 = createUser(2L, "us2", "em2", "pass");
+        Chat chat = createChatObj(1L, loggedUser, user2, null);
+
+        mockMvc.perform( multipart("/api/chats/{id}/files", chat.getId()) )
+                .andExpect( status().isBadRequest() );
     }
 }
