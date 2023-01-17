@@ -8,6 +8,10 @@ using WebSocket connection. Application uses AWS S3 to store users profile image
 
 ### Current version on AWS (frontend)
 http://jszmidla-chatapp.s3-website.eu-central-1.amazonaws.com/
+<br />
+Demo user: 
+<br />
+   login: login123, password: Haslo123
 
 <br /><br />
 ### Important to run
